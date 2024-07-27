@@ -8,7 +8,7 @@
 
 ## 🌟 Features
 
-- **Keyword-Based Forwarding:** Automatically forward messages containing specified keywords to designated chats.
+- **Keyword-Based Forwarding:** Automatically forward messages containing keywords to designated chats.
 - **Multiple Source Chats:** Monitor and copy messages from various chats simultaneously.
 - **Custom Signatures:** Personalize forwarded messages with customizable signatures.
 - **User-Friendly:** Easy to set up with minimal configuration required.
