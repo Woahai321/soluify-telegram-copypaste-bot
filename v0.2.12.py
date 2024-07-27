@@ -149,7 +149,7 @@ async def matrix_effect(logo_frames):
         for row in range(logo_height):
             line = ''
             for col in range(logo_width):
-                if logo_frames[row][col] != ' ':
+                if logo_frames[row][col] != ' ' and col < len(logo_frames[row]):
                     char = logo_frames[row][col]
                     # Gradually change from purple to blue
                     color = (
@@ -169,12 +169,12 @@ async def matrix_effect(logo_frames):
         
         await asyncio.sleep(0.1)
 
-async def pixelate_effect(text, frames=10):
-    lines = text.split('\n')
+async def pixelate_effect(logo_frames):
+    lines = logo_frames
     max_length = max(len(line) for line in lines)
     
-    for frame in range(frames):
-        clear_percentage = frame / frames
+    for frame in range(10):
+        clear_percentage = frame / 10
         pixelated = []
         for line in lines:
             new_line = ''
@@ -199,78 +199,20 @@ async def main():
         "                             <___'"
     ]
 
-    copypaste_art = """
- __   __   __       __        __  ___  ___ 
-/  ` /  \ |__) \ / |__)  /\  /__`  |  |__  
-\__, \__/ |     |  |    /~~\ .__/  |  |___ 
-                                           
-    """
+    copypaste_art = [
+        " __   __   __       __        __  ___  ___ ",
+        "/  ` /  \ |__) \ / |__)  /\  /__`  |  |__  ",
+        "\__, \__/ |     |  |    /~~\ .__/  |  |___ ",
+        "                                           "
+    ]
 
-    total_height = len(logo_frames) + len(copypaste_art.split('\n')) + 1  # +1 for separation
+    total_height = len(logo_frames) + len(copypaste_art) + 1  # +1 for separation
     logo_width = max(len(line) for line in logo_frames)
-    copypaste_width = max(len(line) for line in copypaste_art.split('\n'))
+    copypaste_width = max(len(line) for line in copypaste_art)
     total_width = max(logo_width, copypaste_width)
 
-    async def pixelate_effect():
-        lines = logo_frames
-        max_length = max(len(line) for line in lines)
-        
-        for frame in range(10):
-            clear_percentage = frame / 10
-            pixelated = []
-            for line in lines:
-                new_line = ''
-                for char in line.ljust(max_length):
-                    if random.random() < clear_percentage:
-                        new_line += char
-                    else:
-                        new_line += random.choice('░▒▓█')
-                pixelated.append(new_line)
-            
-            print("\033[H\033[J", end="")  # Clear screen
-            for line in pixelated:
-                print(gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END))
-            await asyncio.sleep(0.1)
-
-    async def matrix_effect():
-        matrix = [[' ' for _ in range(copypaste_width)] for _ in range(len(copypaste_art.split('\n')))]
-        matrix_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?"
-        
-        for frame in atqdm(range(50), desc="Loading", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=75, colour="magenta"):
-            print("\033[H\033[J", end="")  # Clear screen
-            
-            # Update matrix
-            for col in range(copypaste_width):
-                if random.random() < 0.2:  # Chance to start a new "drop"
-                    matrix[0][col] = random.choice(matrix_chars)
-                
-                for row in range(len(copypaste_art.split('\n')) - 1, 0, -1):
-                    matrix[row][col] = matrix[row-1][col]
-                
-                if matrix[0][col] != ' ':
-                    matrix[0][col] = random.choice(matrix_chars)
-            
-            # Print matrix with logo overlay
-            for row in range(len(copypaste_art.split('\n'))):
-                line = ''
-                for col in range(copypaste_width):
-                    if copypaste_art.split('\n')[row][col] != ' ':
-                        char = copypaste_art.split('\n')[row][col]
-                        color = (
-                            int(75 + (0 - 75) * frame / 49),  # R
-                            int(0 + (191 - 0) * frame / 49),  # G
-                            int(130 + (255 - 130) * frame / 49)  # B
-                        )
-                    else:
-                        char = matrix[row][col]
-                        color = (0, 0, 255)  # Blue for matrix
-                    line += gradient_text(char, color, color)
-                print(line)
-            
-            await asyncio.sleep(0.1)
-
-    await pixelate_effect()
-    await matrix_effect()
+    await pixelate_effect(logo_frames)
+    await matrix_effect(copypaste_art)
 
     # Final display of both logos with borders
     border = "+" + "-" * (total_width + 2) + "+"
@@ -281,7 +223,7 @@ async def main():
     print(border)
     print()  # Add a blank line for separation
     print(border)
-    for line in copypaste_art.split('\n'):
+    for line in copypaste_art:
         print(f"| {gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END)} |")
     print(border)
 
