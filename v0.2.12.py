@@ -5,12 +5,19 @@ import sys
 import time
 from telethon.sync import TelegramClient
 from telethon.errors import SessionPasswordNeededError
-from telethon.tl.types import MessageEntityMention
 from colorama import init, Fore, Style
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as atqdm
 
 init(autoreset=True)
+
+# Define color schemes
+MAIN_COLOR_START = (75, 0, 130)  # Purple
+MAIN_COLOR_END = (0, 0, 255)     # Blue
+ALERT_COLOR = (255, 0, 0)        # Red
+SUCCESS_COLOR = (0, 255, 0)      # Green
+PROMPT_COLOR_START = (0, 191, 255)
+PROMPT_COLOR_END = (30, 144, 255)
 
 def gradient_text(text, start_color, end_color):
     start_r, start_g, start_b = start_color
@@ -25,7 +32,7 @@ def gradient_text(text, start_color, end_color):
     return ''.join(gradient)
 
 async def animated_transition(text, duration=0.5):
-    colors = [(255,0,0), (255,165,0), (255,255,0), (0,255,0), (0,0,255), (75,0,130), (238,130,238)]
+    colors = [MAIN_COLOR_START, MAIN_COLOR_END]
     emojis = ["✨", "🚀", "💫", "🌟", "💡", "🔮", "🎉"]
     for _ in range(int(duration * 10)):
         color = random.choice(colors)
@@ -38,7 +45,6 @@ class TelegramForwarder:
     def __init__(self, client, phone_number):
         self.client = client
         self.phone_number = phone_number
-        self.username_replacement = None
         self.blacklist = []
 
     async def list_chats(self):
@@ -47,20 +53,20 @@ class TelegramForwarder:
         if not await self.client.is_user_authorized():
             await self.client.send_code_request(self.phone_number)
             try:
-                await self.client.sign_in(self.phone_number, input(gradient_text('Enter the code: ', (255, 255, 0), (255, 165, 0))))
+                await self.client.sign_in(self.phone_number, input(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
             except SessionPasswordNeededError:
-                await self.client.sign_in(password=input(gradient_text('Two step verification is enabled. Please enter your password: ', (255, 255, 0), (255, 165, 0))))
+                await self.client.sign_in(password=input(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
 
         dialogs = await self.client.get_dialogs()
         
         with open(f"chats_of_{self.phone_number}.txt", "w") as chats_file, tqdm(total=len(dialogs), bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=75, colour="blue") as pbar:
             for dialog in dialogs:
                 chat_info = f"Chat ID: {dialog.id}, Title: {dialog.title}"
-                print(gradient_text(chat_info, (0, 255, 255), (0, 128, 128)))
+                print(gradient_text(chat_info, MAIN_COLOR_START, MAIN_COLOR_END))
                 chats_file.write(chat_info + "\n")
                 pbar.update(1)
         
-        print(gradient_text("All your chats are listed! 📜", (0, 255, 0), (0, 128, 0)))
+        print(gradient_text("All your chats are listed! 📜", SUCCESS_COLOR, SUCCESS_COLOR))
 
     async def forward_messages_to_channels(self, source_chat_ids, destination_channel_ids, keywords, signature):
         await self.client.connect()
@@ -68,14 +74,14 @@ class TelegramForwarder:
         if not await self.client.is_user_authorized():
             await self.client.send_code_request(self.phone_number)
             try:
-                await self.client.sign_in(self.phone_number, input(gradient_text('Enter the code: ', (255, 255, 0), (255, 165, 0))))
+                await self.client.sign_in(self.phone_number, input(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
             except SessionPasswordNeededError:
-                await self.client.sign_in(password=input(gradient_text('Two step verification is enabled. Please enter your password: ', (255, 255, 0), (255, 165, 0))))
+                await self.client.sign_in(password=input(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
 
         last_message_ids = {chat_id: (await self.client.get_messages(chat_id, limit=1))[0].id for chat_id in source_chat_ids}
 
         while True:
-            print(gradient_text("👀 Soluify is on the lookout for new messages...", (0, 191, 255), (30, 144, 255)))
+            print(gradient_text("👀 Soluify is on the lookout for new messages...", MAIN_COLOR_START, MAIN_COLOR_END))
             for chat_id in source_chat_ids:
                 messages = await self.client.get_messages(chat_id, min_id=last_message_ids[chat_id], limit=None)
 
@@ -89,48 +95,17 @@ class TelegramForwarder:
 
                     if should_forward and not any(word.lower() in message.text.lower() for word in self.blacklist):
                         if message.text:
-                            forwarded_message = await self.replace_usernames(message)
                             for dest_id in destination_channel_ids:
-                                await self.client.send_message(dest_id, forwarded_message.message + f"\n\n**{signature}**")
+                                await self.client.send_message(dest_id, message.message + f"\n\n**{signature}**")
                         if message.media:
                             for dest_id in destination_channel_ids:
                                 await self.client.send_file(dest_id, message.media, caption=f"{message.text}\n\n**{signature}**" if message.text else f"**{signature}**")
                         
-                        print(gradient_text("✅ Message forwarded with your signature!", (0, 255, 0), (0, 128, 0)))
+                        print(gradient_text("✅ Message forwarded with your signature!", SUCCESS_COLOR, SUCCESS_COLOR))
 
                     last_message_ids[chat_id] = max(last_message_ids[chat_id], message.id)
 
             await asyncio.sleep(5)
-
-    async def replace_usernames(self, message):
-        if self.username_replacement:
-            new_text = message.message  # Use message.message to get the full message text
-            new_entities = []
-            offset_change = 0
-
-            for entity in message.entities or []:
-                if isinstance(entity, MessageEntityMention):
-                    start = entity.offset + offset_change
-                    end = start + entity.length
-                    old_username = new_text[start:end]  # Extract the username including '@'
-                    new_text = new_text[:start] + '@' + self.username_replacement + new_text[end:]
-                    
-                    new_entity = MessageEntityMention(
-                        offset=start,
-                        length=len('@' + self.username_replacement)
-                    )
-                    new_entities.append(new_entity)
-                    
-                    offset_change += len('@' + self.username_replacement) - entity.length
-                else:
-                    # Adjust offset for other entities
-                    entity.offset += offset_change
-                    new_entities.append(entity)
-
-            message.message = new_text
-            message.entities = new_entities
-
-        return message
 
 def read_credentials():
     try:
@@ -141,7 +116,7 @@ def read_credentials():
             phone_number = lines[2].strip()
             return api_id, api_hash, phone_number
     except FileNotFoundError:
-        print(gradient_text("Couldn't find the credentials file. If this is running for the first time, please log in below:", (255, 0, 0), (255, 100, 100)))
+        print(gradient_text("Couldn't find the credentials file. If this is running for the first time, please log in below:", ALERT_COLOR, ALERT_COLOR))
         return None, None, None
 
 def write_credentials(api_id, api_hash, phone_number):
@@ -212,7 +187,7 @@ async def pixelate_effect(text, frames=10):
         
         print("\033[H\033[J", end="")  # Clear screen
         for line in pixelated:
-            print(gradient_text(line, (75, 0, 130), (0, 191, 255)))
+            print(gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END))
         await asyncio.sleep(0.1)
 
 async def main():
@@ -236,30 +211,51 @@ async def main():
     copypaste_width = max(len(line) for line in copypaste_art.split('\n'))
     total_width = max(logo_width, copypaste_width)
 
+    async def pixelate_effect():
+        lines = logo_frames
+        max_length = max(len(line) for line in lines)
+        
+        for frame in range(10):
+            clear_percentage = frame / 10
+            pixelated = []
+            for line in lines:
+                new_line = ''
+                for char in line.ljust(max_length):
+                    if random.random() < clear_percentage:
+                        new_line += char
+                    else:
+                        new_line += random.choice('░▒▓█')
+                pixelated.append(new_line)
+            
+            print("\033[H\033[J", end="")  # Clear screen
+            for line in pixelated:
+                print(gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END))
+            await asyncio.sleep(0.1)
+
     async def matrix_effect():
-        matrix = [[' ' for _ in range(logo_width)] for _ in range(len(logo_frames))]
+        matrix = [[' ' for _ in range(copypaste_width)] for _ in range(len(copypaste_art.split('\n')))]
         matrix_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?"
         
         for frame in atqdm(range(50), desc="Loading", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=75, colour="magenta"):
             print("\033[H\033[J", end="")  # Clear screen
             
             # Update matrix
-            for col in range(logo_width):
+            for col in range(copypaste_width):
                 if random.random() < 0.2:  # Chance to start a new "drop"
                     matrix[0][col] = random.choice(matrix_chars)
                 
-                for row in range(len(logo_frames) - 1, 0, -1):
+                for row in range(len(copypaste_art.split('\n')) - 1, 0, -1):
                     matrix[row][col] = matrix[row-1][col]
                 
                 if matrix[0][col] != ' ':
                     matrix[0][col] = random.choice(matrix_chars)
             
             # Print matrix with logo overlay
-            for row in range(len(logo_frames)):
+            for row in range(len(copypaste_art.split('\n'))):
                 line = ''
-                for col in range(logo_width):
-                    if logo_frames[row][col] != ' ':
-                        char = logo_frames[row][col]
+                for col in range(copypaste_width):
+                    if copypaste_art.split('\n')[row][col] != ' ':
+                        char = copypaste_art.split('\n')[row][col]
                         color = (
                             int(75 + (0 - 75) * frame / 49),  # R
                             int(0 + (191 - 0) * frame / 49),  # G
@@ -271,30 +267,23 @@ async def main():
                     line += gradient_text(char, color, color)
                 print(line)
             
-            # Print copypaste art with pixelate effect
-            print()  # Separation line
-            copypaste_lines = copypaste_art.split('\n')
-            clear_percentage = frame / 49
-            for line in copypaste_lines:
-                pixelated_line = ''
-                for char in line:
-                    if random.random() < clear_percentage:
-                        pixelated_line += char
-                    else:
-                        pixelated_line += random.choice('░▒▓█')
-                print(gradient_text(pixelated_line, (0, 0, 255), (0, 191, 255)))  # Blue gradient for copypaste
-            
             await asyncio.sleep(0.1)
 
+    await pixelate_effect()
     await matrix_effect()
 
-    # Final display of both logos
+    # Final display of both logos with borders
+    border = "+" + "-" * (total_width + 2) + "+"
     print("\033[H\033[J", end="")  # Clear screen
+    print(border)
     for line in logo_frames:
-        print(gradient_text(line, (0, 191, 255), (0, 191, 255)))  # Deep Sky Blue color for Soluify
+        print(f"| {gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END)} |")
+    print(border)
     print()  # Add a blank line for separation
+    print(border)
     for line in copypaste_art.split('\n'):
-        print(gradient_text(line, (0, 191, 255), (0, 191, 255)))  # Deep Sky Blue color for COPYPASTE
+        print(f"| {gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END)} |")
+    print(border)
 
     intro_text = gradient_text("""
 👋 Welcome to the Soluify Telegram Copy & Paste Bot!
@@ -304,56 +293,51 @@ async def main():
 3. Set up the bot with the provided prompts.
 4. Add custom filters and signatures to your messages.
 5. Sit back and let us handle the rest! 🧘
-""", (255, 0, 255), (0, 255, 255))
+""", MAIN_COLOR_START, MAIN_COLOR_END)
 
     print(intro_text)
 
     api_id, api_hash, phone_number = read_credentials()
 
     if api_id is None or api_hash is None or phone_number is None:
-        api_id = input(gradient_text("Please enter your API ID: ", (0, 191, 255), (30, 144, 255)))
-        api_hash = input(gradient_text("Please enter your API Hash: ", (0, 191, 255), (30, 144, 255)))
-        phone_number = input(gradient_text("Please enter your phone number (e.g., 447123456789): ", (0, 191, 255), (30, 144, 255)))
+        api_id = input(gradient_text("Please enter your API ID: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        api_hash = input(gradient_text("Please enter your API Hash: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        phone_number = input(gradient_text("Please enter your phone number (e.g., 447123456789): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
         write_credentials(api_id, api_hash, phone_number)
 
     client = TelegramClient('session_' + phone_number, api_id, api_hash)
     forwarder = TelegramForwarder(client, phone_number)
     
-    print(gradient_text("What do you want to do?", (0, 255, 255), (0, 128, 128)))
-    print(gradient_text("1. List My Chat IDs 📋", (0, 191, 255), (30, 144, 255)))
-    print(gradient_text("2. Set Up Message Forwarding ⚙️", (0, 191, 255), (30, 144, 255)))
+    print(gradient_text("What do you want to do?", MAIN_COLOR_START, MAIN_COLOR_END))
+    print(gradient_text("1. List My Chat IDs 📋", PROMPT_COLOR_START, PROMPT_COLOR_END))
+    print(gradient_text("2. Set Up Message Forwarding ⚙️", PROMPT_COLOR_START, PROMPT_COLOR_END))
     
-    choice = input(gradient_text("Pick an option (1 or 2): ", (255, 255, 0), (255, 165, 0)))
+    choice = input(gradient_text("Pick an option (1 or 2): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
     
     if choice == "1":
         await animated_transition("Listing chats")
         await forwarder.list_chats()
     elif choice == "2":
         await animated_transition("Setting up message forwarding")
-        source_chat_ids = input(gradient_text("Enter the source chat IDs (comma separated): ", (0, 191, 255), (30, 144, 255))).split(',')
+        source_chat_ids = input(gradient_text("Enter the source chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
         source_chat_ids = [int(chat_id.strip()) for chat_id in source_chat_ids]
         
-        destination_channel_ids = input(gradient_text("Enter the destination chat IDs (comma separated): ", (0, 191, 255), (30, 144, 255))).split(',')
+        destination_channel_ids = input(gradient_text("Enter the destination chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
         destination_channel_ids = [int(chat_id.strip()) for chat_id in destination_channel_ids]
         
-        print(gradient_text("Enter keywords to filter messages (optional). Leave blank to forward all messages.", (0, 255, 255), (0, 128, 128)))
-        keywords = input(gradient_text("Keywords (comma separated if multiple, or leave blank): ", (0, 191, 255), (30, 144, 255))).split(',')
+        print(gradient_text("Enter keywords to filter messages (optional). Leave blank to forward all messages.", MAIN_COLOR_START, MAIN_COLOR_END))
+        keywords = input(gradient_text("Keywords (comma separated if multiple, or leave blank): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
         keywords = [keyword.strip() for keyword in keywords if keyword.strip()]
         
-        signature = input(gradient_text("Enter the signature to append to each message: ", (0, 191, 255), (30, 144, 255)))
+        signature = input(gradient_text("Enter the signature to append to each message: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
         
-        replace_usernames = input(gradient_text("Do you want to replace all @usernames in forwarded messages? (y/n): ", (0, 191, 255), (30, 144, 255))).lower() == 'y'
-        if replace_usernames:
-            replacement = input(gradient_text("Enter the replacement for all @usernames: ", (0, 191, 255), (30, 144, 255)))
-            forwarder.username_replacement = replacement
-        
-        blacklist = input(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", (0, 191, 255), (30, 144, 255))).split(',')
+        blacklist = input(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
         forwarder.blacklist = [word.strip().lower() for word in blacklist if word.strip()]
         
         await animated_transition("Starting message forwarding")
         await forwarder.forward_messages_to_channels(source_chat_ids, destination_channel_ids, keywords, signature)
     else:
-        print(gradient_text("❌ Oops! That's not a valid choice.", (255, 0, 0), (255, 100, 100)))
+        print(gradient_text("❌ Oops! That's not a valid choice.", ALERT_COLOR, ALERT_COLOR))
 
 if __name__ == "__main__":
     asyncio.run(main())
