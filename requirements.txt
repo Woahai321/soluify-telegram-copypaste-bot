@@ -2,3 +2,5 @@ telethon
 colorama
 pyfiglet
 termcolor
+tqdm
+pyyaml

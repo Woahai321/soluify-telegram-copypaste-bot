@@ -6,6 +6,9 @@ from telethon.sync import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 from colorama import init, Fore, Style
 import sys
+from tqdm import tqdm
+from tqdm.asyncio import tqdm as atqdm
+import yaml
 
 init(autoreset=True)
 
@@ -20,13 +23,22 @@ def gradient_text(text, start_color, end_color):
         gradient.append(f"\033[38;2;{r};{g};{b}m{char}\033[0m")
     return ''.join(gradient)
 
+async def animated_transition(text, duration=1):
+    chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    for _ in range(int(duration * 10)):
+        for char in chars:
+            print(f"\r{char} {text}", end="", flush=True)
+            await asyncio.sleep(0.1)
+    print()
+
 class TelegramForwarder:
     def __init__(self, api_id, api_hash, phone_number):
         self.api_id = api_id
         self.api_hash = api_hash
         self.phone_number = phone_number
         self.client = TelegramClient('session_' + phone_number, api_id, api_hash)
-        self.username_replacements = {}
+        self.username_replacement = None
+        self.blacklist = []
 
     async def list_chats(self):
         await self.client.connect()
@@ -40,15 +52,18 @@ class TelegramForwarder:
 
         dialogs = await self.client.get_dialogs()
         chats_file = open(f"chats_of_{self.phone_number}.txt", "w")
-        for dialog in dialogs:
-            chat_info = f"Chat ID: {dialog.id}, Title: {dialog.title}"
-            print(gradient_text(chat_info, (0, 255, 255), (0, 128, 128)))
-            chats_file.write(chat_info + "\n")
+        
+        with tqdm(total=len(dialogs), bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=75, colour="blue") as pbar:
+            for dialog in dialogs:
+                chat_info = f"Chat ID: {dialog.id}, Title: {dialog.title}"
+                print(gradient_text(chat_info, (0, 255, 255), (0, 128, 128)))
+                chats_file.write(chat_info + "\n")
+                pbar.update(1)
         chats_file.close()
         
         print(gradient_text("All your chats are listed! 📜", (0, 255, 0), (0, 128, 0)))
 
-    async def forward_messages_to_channel(self, source_chat_ids, destination_channel_id, keywords, signature):
+    async def forward_messages_to_channels(self, source_chat_ids, destination_channel_ids, keywords, signature):
         await self.client.connect()
 
         if not await self.client.is_user_authorized():
@@ -73,12 +88,14 @@ class TelegramForwarder:
                     else:
                         should_forward = True
 
-                    if should_forward:
+                    if should_forward and not any(word.lower() in message.text.lower() for word in self.blacklist):
                         if message.text:
                             forwarded_text = self.replace_usernames(message.text)
-                            await self.client.send_message(destination_channel_id, f"{forwarded_text}\n\n**{signature}**")
+                            for dest_id in destination_channel_ids:
+                                await self.client.send_message(dest_id, f"{forwarded_text}\n\n**{signature}**")
                         if message.media:
-                            await self.client.send_file(destination_channel_id, message.media, caption=f"{message.text}\n\n**{signature}**" if message.text else f"**{signature}**")
+                            for dest_id in destination_channel_ids:
+                                await self.client.send_file(dest_id, message.media, caption=f"{message.text}\n\n**{signature}**" if message.text else f"**{signature}**")
                         
                         print(gradient_text("✅ Message forwarded with your signature!", (0, 255, 0), (0, 128, 0)))
 
@@ -87,8 +104,8 @@ class TelegramForwarder:
             await asyncio.sleep(5)
 
     def replace_usernames(self, text):
-        for username, replacement in self.username_replacements.items():
-            text = re.sub(f'@{username}', replacement, text)
+        if self.username_replacement:
+            return re.sub(r'@\w+', self.username_replacement, text)
         return text
 
 def read_credentials():
@@ -125,7 +142,7 @@ async def main():
         logo_height = len(logo_frames)
         matrix = [[' ' for _ in range(logo_width)] for _ in range(logo_height)]
         
-        for frame in range(50):  # Number of animation frames
+        for frame in atqdm(range(50), desc="Loading", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=75, colour="magenta"):
             print("\033[H\033[J", end="")  # Clear screen
             
             # Update matrix
@@ -199,26 +216,32 @@ async def main():
     choice = input(gradient_text("Pick an option (1 or 2): ", (255, 255, 0), (255, 165, 0)))
     
     if choice == "1":
+        await animated_transition("Listing chats")
         await forwarder.list_chats()
     elif choice == "2":
+        await animated_transition("Setting up message forwarding")
         source_chat_ids = input(gradient_text("Enter the source chat IDs (comma separated): ", (0, 191, 255), (30, 144, 255))).split(',')
         source_chat_ids = [int(chat_id.strip()) for chat_id in source_chat_ids]
-        destination_channel_id = int(input(gradient_text("Enter the destination chat ID: ", (0, 191, 255), (30, 144, 255))))
+        
+        destination_channel_ids = input(gradient_text("Enter the destination chat IDs (comma separated): ", (0, 191, 255), (30, 144, 255))).split(',')
+        destination_channel_ids = [int(chat_id.strip()) for chat_id in destination_channel_ids]
+        
         print(gradient_text("Enter keywords to filter messages (optional). Leave blank to forward all messages.", (0, 255, 255), (0, 128, 128)))
         keywords = input(gradient_text("Keywords (comma separated if multiple, or leave blank): ", (0, 191, 255), (30, 144, 255))).split(',')
         keywords = [keyword.strip() for keyword in keywords if keyword.strip()]
+        
         signature = input(gradient_text("Enter the signature to append to each message: ", (0, 191, 255), (30, 144, 255)))
         
-        replace_usernames = input(gradient_text("Do you want to replace usernames in forwarded messages? (y/n): ", (0, 191, 255), (30, 144, 255))).lower() == 'y'
+        replace_usernames = input(gradient_text("Do you want to replace all @usernames in forwarded messages? (y/n): ", (0, 191, 255), (30, 144, 255))).lower() == 'y'
         if replace_usernames:
-            while True:
-                username = input(gradient_text("Enter a username to replace (without @, or press Enter to finish): ", (0, 191, 255), (30, 144, 255)))
-                if not username:
-                    break
-                replacement = input(gradient_text(f"Enter replacement for @{username}: ", (0, 191, 255), (30, 144, 255)))
-                forwarder.username_replacements[username] = replacement
+            replacement = input(gradient_text("Enter the replacement for all @usernames: ", (0, 191, 255), (30, 144, 255)))
+            forwarder.username_replacement = replacement
         
-        await forwarder.forward_messages_to_channel(source_chat_ids, destination_channel_id, keywords, signature)
+        blacklist = input(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", (0, 191, 255), (30, 144, 255))).split(',')
+        forwarder.blacklist = [word.strip().lower() for word in blacklist if word.strip()]
+        
+        await animated_transition("Starting message forwarding")
+        await forwarder.forward_messages_to_channels(source_chat_ids, destination_channel_ids, keywords, signature)
     else:
         print(gradient_text("❌ Oops! That's not a valid choice.", (255, 0, 0), (255, 100, 100)))
 
