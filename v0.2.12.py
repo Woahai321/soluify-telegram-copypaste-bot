@@ -12,12 +12,12 @@ from tqdm.asyncio import tqdm as atqdm
 init(autoreset=True)
 
 # Define color schemes
-MAIN_COLOR_START = (75, 0, 130)  # Purple
-MAIN_COLOR_END = (0, 0, 255)     # Blue
-ALERT_COLOR = (255, 0, 0)        # Red
-SUCCESS_COLOR = (0, 255, 0)      # Green
-PROMPT_COLOR_START = (0, 191, 255)
-PROMPT_COLOR_END = (30, 144, 255)
+MAIN_COLOR_START = (138, 43, 226)  # Medium Purple
+MAIN_COLOR_END = (0, 191, 255)     # Deep Sky Blue
+ALERT_COLOR = (255, 69, 0)         # Red-Orange
+SUCCESS_COLOR = (50, 205, 50)      # Lime Green
+PROMPT_COLOR_START = (0, 255, 255) # Cyan
+PROMPT_COLOR_END = (135, 206, 250) # Light Sky Blue
 
 def gradient_text(text, start_color, end_color):
     start_r, start_g, start_b = start_color
@@ -153,17 +153,17 @@ async def matrix_effect(logo_frames):
                     char = logo_frames[row][col]
                     # Gradually change from purple to blue
                     color = (
-                        int(75 + (0 - 75) * frame / 49),  # R
-                        int(0 + (191 - 0) * frame / 49),  # G
-                        int(130 + (255 - 130) * frame / 49)  # B
+                        int(138 + (0 - 138) * frame / 49),  # R
+                        int(43 + (191 - 43) * frame / 49),   # G
+                        int(226 + (255 - 226) * frame / 49)  # B
                     )
                 else:
                     char = matrix[row][col]
                     # Random blue or purple for falling characters
                     if random.random() < 0.5:
-                        color = (75, 0, 130)  # Purple
+                        color = (138, 43, 226)  # Medium Purple
                     else:
-                        color = (0, 0, 255)  # Blue
+                        color = (0, 191, 255)  # Deep Sky Blue
                 line += gradient_text(char, color, color)
             print(line)
         
