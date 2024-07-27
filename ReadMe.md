@@ -9,8 +9,9 @@
 ## 🌟 Features
 
 - **Keyword-Based Forwarding:** Automatically forward messages containing keywords to designated chats.
-- **Multiple Source Chats:** Monitor and copy messages from various chats simultaneously.
+- **Multiple Source & Destination Chats:** Monitor and copy messages from various chats simultaneously.
 - **Custom Signatures:** Personalize forwarded messages with customizable signatures.
+- **Blacklisting:** Block any messages from being forwarded if a word is seen.
 - **User-Friendly:** Easy to set up with minimal configuration required.
 - **Real-time Monitoring:** Continuously monitors and forwards messages in real-time.
 
