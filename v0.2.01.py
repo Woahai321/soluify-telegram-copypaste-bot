@@ -4,11 +4,11 @@ import re
 import random
 from telethon.sync import TelegramClient
 from telethon.errors import SessionPasswordNeededError
+from telethon.tl.types import MessageEntityMention
 from colorama import init, Fore, Style
 import sys
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as atqdm
-import yaml
 
 init(autoreset=True)
 
@@ -23,12 +23,14 @@ def gradient_text(text, start_color, end_color):
         gradient.append(f"\033[38;2;{r};{g};{b}m{char}\033[0m")
     return ''.join(gradient)
 
-async def animated_transition(text, duration=1):
-    chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+async def animated_transition(text, duration=0.5):
+    colors = [(255,0,0), (255,165,0), (255,255,0), (0,255,0), (0,0,255), (75,0,130), (238,130,238)]
+    emojis = ["✨", "🚀", "💫", "🌟", "💡", "🔮", "🎉"]
     for _ in range(int(duration * 10)):
-        for char in chars:
-            print(f"\r{char} {text}", end="", flush=True)
-            await asyncio.sleep(0.1)
+        color = random.choice(colors)
+        emoji = random.choice(emojis)
+        print(f"\r{gradient_text(f'{emoji} {text} {emoji}', color, color)}", end="", flush=True)
+        await asyncio.sleep(0.05)
     print()
 
 class TelegramForwarder:
@@ -90,9 +92,9 @@ class TelegramForwarder:
 
                     if should_forward and not any(word.lower() in message.text.lower() for word in self.blacklist):
                         if message.text:
-                            forwarded_text = self.replace_usernames(message.text)
+                            forwarded_text = await self.replace_usernames(message)
                             for dest_id in destination_channel_ids:
-                                await self.client.send_message(dest_id, f"{forwarded_text}\n\n**{signature}**")
+                                await self.client.send_message(dest_id, forwarded_text + f"\n\n**{signature}**")
                         if message.media:
                             for dest_id in destination_channel_ids:
                                 await self.client.send_file(dest_id, message.media, caption=f"{message.text}\n\n**{signature}**" if message.text else f"**{signature}**")
@@ -103,10 +105,34 @@ class TelegramForwarder:
 
             await asyncio.sleep(5)
 
-    def replace_usernames(self, text):
+    async def replace_usernames(self, message):
         if self.username_replacement:
-            return re.sub(r'@\w+', self.username_replacement, text)
-        return text
+            new_text = message.text
+            new_entities = []
+            offset_change = 0
+
+            for entity in message.entities or []:
+                if isinstance(entity, MessageEntityMention):
+                    start = entity.offset + offset_change
+                    end = start + entity.length
+                    old_username = new_text[start+1:end]  # +1 to skip the '@'
+                    new_text = new_text[:start] + self.username_replacement + new_text[end:]
+                    
+                    new_entity = MessageEntityMention(
+                        offset=start,
+                        length=len(self.username_replacement)
+                    )
+                    new_entities.append(new_entity)
+                    
+                    offset_change += len(self.username_replacement) - entity.length
+                else:
+                    entity.offset += offset_change
+                    new_entities.append(entity)
+
+            message.text = new_text
+            message.entities = new_entities
+
+        return message
 
 def read_credentials():
     try:
@@ -126,6 +152,71 @@ def write_credentials(api_id, api_hash, phone_number):
         file.write(api_hash + "\n")
         file.write(phone_number + "\n")
 
+async def matrix_effect(logo_frames):
+    logo_width = max(len(line) for line in logo_frames)
+    logo_height = len(logo_frames)
+    matrix = [[' ' for _ in range(logo_width)] for _ in range(logo_height)]
+    matrix_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?"
+    
+    for frame in atqdm(range(50), desc="Loading", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=75, colour="magenta"):
+        print("\033[H\033[J", end="")  # Clear screen
+        
+        # Update matrix
+        for col in range(logo_width):
+            if random.random() < 0.2:  # Chance to start a new "drop"
+                matrix[0][col] = random.choice(matrix_chars)
+            
+            for row in range(logo_height - 1, 0, -1):
+                matrix[row][col] = matrix[row-1][col]
+            
+            if matrix[0][col] != ' ':
+                matrix[0][col] = random.choice(matrix_chars)
+        
+        # Print matrix with logo overlay
+        for row in range(logo_height):
+            line = ''
+            for col in range(logo_width):
+                if logo_frames[row][col] != ' ':
+                    char = logo_frames[row][col]
+                    # Gradually change from purple to blue
+                    color = (
+                        int(75 + (0 - 75) * frame / 49),  # R
+                        int(0 + (191 - 0) * frame / 49),  # G
+                        int(130 + (255 - 130) * frame / 49)  # B
+                    )
+                else:
+                    char = matrix[row][col]
+                    # Random blue or purple for falling characters
+                    if random.random() < 0.5:
+                        color = (75, 0, 130)  # Purple
+                    else:
+                        color = (0, 0, 255)  # Blue
+                line += gradient_text(char, color, color)
+            print(line)
+        
+        await asyncio.sleep(0.1)
+
+async def pixelate_effect(text, frames=10):
+    lines = text.split('\n')
+    max_length = max(len(line) for line in lines)
+    
+    for frame in range(frames):
+        clear_percentage = frame / frames
+        pixelated = []
+        for line in lines:
+            new_line = ''
+            for char in line.ljust(max_length):
+                if random.random() < clear_percentage:
+                    new_line += char
+                else:
+                    new_line += random.choice('░▒▓█')
+            pixelated.append(new_line)
+        
+        print("\033[H\033[J", end="")  # Clear screen
+        for line in pixelated:
+            print(gradient_text(line, (75, 0, 130), (0, 191, 255)))
+        await asyncio.sleep(0.1)
+
 async def main():
     logo_frames = [
         "     ___       _       _  ___     ",
@@ -135,52 +226,18 @@ async def main():
         "                             <___'"
     ]
 
-    matrix_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?"
+    copypaste_art = """
+ __   __   __       __        __  ___  ___ 
+/  ` /  \ |__)  /  |__)  /\  /__`  |  |__  
+\__, \__/ |     \  |    /~~\ .__/  |  |___ 
+                                           
+    """
 
-    async def matrix_effect():
-        logo_width = max(len(line) for line in logo_frames)
-        logo_height = len(logo_frames)
-        matrix = [[' ' for _ in range(logo_width)] for _ in range(logo_height)]
-        
-        for frame in atqdm(range(50), desc="Loading", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=75, colour="magenta"):
-            print("\033[H\033[J", end="")  # Clear screen
-            
-            # Update matrix
-            for col in range(logo_width):
-                if random.random() < 0.2:  # Chance to start a new "drop"
-                    matrix[0][col] = random.choice(matrix_chars)
-                
-                for row in range(logo_height - 1, 0, -1):
-                    matrix[row][col] = matrix[row-1][col]
-                
-                if matrix[0][col] != ' ':
-                    matrix[0][col] = random.choice(matrix_chars)
-            
-            # Print matrix with logo overlay
-            for row in range(logo_height):
-                line = ''
-                for col in range(logo_width):
-                    if logo_frames[row][col] != ' ':
-                        char = logo_frames[row][col]
-                        # Gradually change from purple to blue
-                        color = (
-                            int(75 + (0 - 75) * frame / 49),  # R
-                            int(0 + (191 - 0) * frame / 49),  # G
-                            int(130 + (255 - 130) * frame / 49)  # B
-                        )
-                    else:
-                        char = matrix[row][col]
-                        # Random blue or purple for falling characters
-                        if random.random() < 0.5:
-                            color = (75, 0, 130)  # Purple
-                        else:
-                            color = (0, 0, 255)  # Blue
-                    line += gradient_text(char, color, color)
-                print(line)
-            
-            await asyncio.sleep(0.1)
-
-    await matrix_effect()
+    # Run matrix effect and pixelate effect concurrently
+    await asyncio.gather(
+        matrix_effect(logo_frames),
+        pixelate_effect(copypaste_art)
+    )
 
     # Final display of the logo in blue
     print("\033[H\033[J", end="")  # Clear screen
