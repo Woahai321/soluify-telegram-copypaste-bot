@@ -29,8 +29,8 @@ Specify one or more keywords that, if found in a message, will trigger the forwa
 1. **Clone the repository:**
 
     ```
-    git clone https://github.com/{fill-in}
-    cd Soluify-Telegram-Copy-Paste-Bot
+    git clone https://github.com/Woahai321/soluify-telegram-copypaste-bot.git
+    cd soluify-telegram-copypaste-bot
     ```
 
 2. **Install the required dependencies:**
