@@ -118,24 +118,57 @@ async def main():
         "                             <___'"
     ]
 
-    colors = [
-        (255, 0, 0), (255, 165, 0), (255, 255, 0), (0, 255, 0),
-        (0, 0, 255), (75, 0, 130), (238, 130, 238)
-    ]
+    matrix_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?"
 
-    async def glitch_effect():
-        for _ in range(5):
-            print("\033[H\033[J", end="")
-            for line in logo_frames:
-                glitched_line = ''.join(random.choice(['_', '/', '\\', '|', ' ']) if random.random() < 0.1 else c for c in line)
-                print(gradient_text(glitched_line, random.choice(colors), (255, 255, 255)))
+    async def matrix_effect():
+        logo_width = max(len(line) for line in logo_frames)
+        logo_height = len(logo_frames)
+        matrix = [[' ' for _ in range(logo_width)] for _ in range(logo_height)]
+        
+        for frame in range(50):  # Number of animation frames
+            print("\033[H\033[J", end="")  # Clear screen
+            
+            # Update matrix
+            for col in range(logo_width):
+                if random.random() < 0.2:  # Chance to start a new "drop"
+                    matrix[0][col] = random.choice(matrix_chars)
+                
+                for row in range(logo_height - 1, 0, -1):
+                    matrix[row][col] = matrix[row-1][col]
+                
+                if matrix[0][col] != ' ':
+                    matrix[0][col] = random.choice(matrix_chars)
+            
+            # Print matrix with logo overlay
+            for row in range(logo_height):
+                line = ''
+                for col in range(logo_width):
+                    if logo_frames[row][col] != ' ':
+                        char = logo_frames[row][col]
+                        # Gradually change from purple to blue
+                        color = (
+                            int(75 + (0 - 75) * frame / 49),  # R
+                            int(0 + (191 - 0) * frame / 49),  # G
+                            int(130 + (255 - 130) * frame / 49)  # B
+                        )
+                    else:
+                        char = matrix[row][col]
+                        # Random blue or purple for falling characters
+                        if random.random() < 0.5:
+                            color = (75, 0, 130)  # Purple
+                        else:
+                            color = (0, 0, 255)  # Blue
+                    line += gradient_text(char, color, color)
+                print(line)
+            
             await asyncio.sleep(0.1)
 
-    await glitch_effect()
+    await matrix_effect()
 
-    print("\033[H\033[J", end="")
+    # Final display of the logo in blue
+    print("\033[H\033[J", end="")  # Clear screen
     for line in logo_frames:
-        print(gradient_text(line, (0, 191, 255), (30, 144, 255)))
+        print(gradient_text(line, (0, 191, 255), (0, 191, 255)))  # Deep Sky Blue color for final display
 
     intro_text = gradient_text("""
 👋 Welcome to the Soluify Telegram Copy & Paste Bot!
