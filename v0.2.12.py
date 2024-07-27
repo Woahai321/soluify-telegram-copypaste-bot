@@ -12,7 +12,7 @@ from tqdm.asyncio import tqdm as atqdm
 init(autoreset=True)
 
 # Define color schemes
-MAIN_COLOR_START = (138, 43, 226)  # Medium Purple
+MAIN_COLOR_START = (147, 112, 219)  # Medium Purple
 MAIN_COLOR_END = (0, 191, 255)     # Deep Sky Blue
 ALERT_COLOR = (255, 69, 0)         # Red-Orange
 SUCCESS_COLOR = (50, 205, 50)      # Lime Green
@@ -153,15 +153,15 @@ async def matrix_effect(logo_frames):
                     char = logo_frames[row][col]
                     # Gradually change from purple to blue
                     color = (
-                        int(138 + (0 - 138) * frame / 49),  # R
-                        int(43 + (191 - 43) * frame / 49),   # G
-                        int(226 + (255 - 226) * frame / 49)  # B
+                        int(147 + (0 - 147) * frame / 49),  # R
+                        int(112 + (191 - 112) * frame / 49), # G
+                        int(219 + (255 - 219) * frame / 49)  # B
                     )
                 else:
                     char = matrix[row][col]
                     # Random blue or purple for falling characters
                     if random.random() < 0.5:
-                        color = (138, 43, 226)  # Medium Purple
+                        color = (147, 112, 219)  # Medium Purple
                     else:
                         color = (0, 191, 255)  # Deep Sky Blue
                 line += gradient_text(char, color, color)
@@ -211,21 +211,17 @@ async def main():
     copypaste_width = max(len(line) for line in copypaste_art)
     total_width = max(logo_width, copypaste_width)
 
+    # Display both logos together
     await pixelate_effect(logo_frames)
     await matrix_effect(copypaste_art)
 
-    # Final display of both logos with borders
-    border = "+" + "-" * (total_width + 2) + "+"
+    # Final display of both logos
     print("\033[H\033[J", end="")  # Clear screen
-    print(border)
     for line in logo_frames:
-        print(f"| {gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END)} |")
-    print(border)
+        print(gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END))
     print()  # Add a blank line for separation
-    print(border)
     for line in copypaste_art:
-        print(f"| {gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END)} |")
-    print(border)
+        print(gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END))
 
     intro_text = gradient_text("""
 👋 Welcome to the Soluify Telegram Copy & Paste Bot!
