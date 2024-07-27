@@ -32,7 +32,7 @@ class TelegramForwarder:
           
         print(Fore.GREEN + "List of groups printed successfully!")
 
-    async def forward_messages_to_channel(self, source_chat_id, destination_channel_id, keywords):
+    async def forward_messages_to_channel(self, source_chat_ids, destination_channel_id, keywords):
         await self.client.connect()
 
         # Ensure you're authorized
@@ -40,31 +40,32 @@ class TelegramForwarder:
             await self.client.send_code_request(self.phone_number)
             await self.client.sign_in(self.phone_number, input(Fore.YELLOW + 'Enter the code: ' + Style.RESET_ALL))
 
-        last_message_id = (await self.client.get_messages(source_chat_id, limit=1))[0].id
+        last_message_ids = {chat_id: (await self.client.get_messages(chat_id, limit=1))[0].id for chat_id in source_chat_ids}
 
         while True:
             print(Fore.CYAN + "Checking for messages and forwarding them...")
-            # Get new messages since the last checked message
-            messages = await self.client.get_messages(source_chat_id, min_id=last_message_id, limit=None)
+            for chat_id in source_chat_ids:
+                # Get new messages since the last checked message
+                messages = await self.client.get_messages(chat_id, min_id=last_message_ids[chat_id], limit=None)
 
-            for message in reversed(messages):
-                # Check if the message text includes any of the keywords
-                if keywords:
-                    if message.text and any(keyword in message.text.lower() for keyword in keywords):
-                        print(Fore.YELLOW + f"Message contains a keyword: {message.text}")
+                for message in reversed(messages):
+                    # Check if the message text includes any of the keywords
+                    if keywords:
+                        if message.text and any(keyword in message.text.lower() for keyword in keywords):
+                            print(Fore.YELLOW + f"Message contains a keyword: {message.text}")
 
-                        # Forward the message to the destination channel
-                        await self.client.send_message(destination_channel_id, message.text)
+                            # Forward the message to the destination channel
+                            await self.client.send_message(destination_channel_id, message.text)
 
-                        print(Fore.GREEN + "Message forwarded")
-                else:
-                        # Forward the message to the destination channel
-                        await self.client.send_message(destination_channel_id, message.text)
+                            print(Fore.GREEN + "Message forwarded")
+                    else:
+                            # Forward the message to the destination channel
+                            await self.client.send_message(destination_channel_id, message.text)
 
-                        print(Fore.GREEN + "Message forwarded")
+                            print(Fore.GREEN + "Message forwarded")
 
-                # Update the last message ID
-                last_message_id = max(last_message_id, message.id)
+                    # Update the last message ID
+                    last_message_ids[chat_id] = max(last_message_ids[chat_id], message.id)
 
             # Add a delay before checking for new messages again
             await asyncio.sleep(5)  # Adjust the delay time as needed
@@ -115,20 +116,21 @@ async def main():
     forwarder = TelegramForwarder(api_id, api_hash, phone_number)
     
     print(Fore.CYAN + "Choose an option:")
-    print(Fore.CYAN + "1. List Chats")
-    print(Fore.CYAN + "2. Forward Messages")
+    print(Fore.CYAN + "1. List My Chat IDs")
+    print(Fore.CYAN + "2. Configure Forwarding Messages")
     
     choice = input(Fore.LIGHTBLUE_EX + "Enter your choice: " + Style.RESET_ALL)
     
     if choice == "1":
         await forwarder.list_chats()
     elif choice == "2":
-        source_chat_id = int(input(Fore.LIGHTBLUE_EX + "Enter the source chat ID: " + Style.RESET_ALL))
+        source_chat_ids = input(Fore.LIGHTBLUE_EX + "Enter the source chat IDs (comma separated): " + Style.RESET_ALL).split(',')
+        source_chat_ids = [int(chat_id.strip()) for chat_id in source_chat_ids]
         destination_channel_id = int(input(Fore.LIGHTBLUE_EX + "Enter the destination chat ID: " + Style.RESET_ALL))
         print(Fore.CYAN + "Enter keywords if you want to forward messages with specific keywords, or leave blank to forward every message!")
-        keywords = input(Fore.LIGHTBLUE_EX + "Put keywords (comma separated if multiple, or leave blank): " + Style.RESET_ALL).split(",")
+        keywords = input(Fore.LIGHTBLUE_EX + "Put keywords (comma separated if multiple, or leave blank): " + Style.RESET_ALL).split(',')
         
-        await forwarder.forward_messages_to_channel(source_chat_id, destination_channel_id, keywords)
+        await forwarder.forward_messages_to_channel(source_chat_ids, destination_channel_id, keywords)
     else:
         print(Fore.RED + "Invalid choice")
 

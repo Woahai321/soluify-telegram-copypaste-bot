@@ -6,7 +6,7 @@ The **Soluify Telegram Copy & Paste Bot** is a versatile Python script designed 
 
 ## 🌟 Features
 
-- **Keyword-Based Forwarding:** Automatically forward messages containing specific keywords from one chat to another.
+- **Keyword-Based Forwarding:** Automatically forward messages containing specific keywords between chats.
 - **User-Friendly:** Easy to set up with minimal configuration required.
 - **Real-time Monitoring:** Continuously monitors and forwards messages in real-time.
 
@@ -51,8 +51,8 @@ Specify one or more keywords that, if found in a message, will trigger the forwa
     ```
 
 5. **Choose an option:**
-    - **(1) List Chats:** View and select chats to use for message forwarding.
-    - **(2) Forward Messages:** Input the source chat ID, destination chat ID, and keywords to initiate message forwarding.
+    - **(1) List My Chat IDs:** View and select chats to use for message forwarding.
+    - **(2) Configure Forwarding Messages:** Input the source chat ID, destination chat ID, and keywords to initiate message forwarding.
 
 ---
 
@@ -73,4 +73,4 @@ For any queries or issues, please reach out to us [here](https://soluify.com/con
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the [LICENSE](https://rem.mit-license.org) file for more details.
+This project is licensed under the MIT License. See [LICENSE](https://rem.mit-license.org) for more details.
