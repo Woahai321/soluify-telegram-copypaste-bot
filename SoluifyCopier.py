@@ -52,17 +52,17 @@ class TelegramForwarder:
                     # Check if the message text includes any of the keywords
                     if keywords:
                         if message.text and any(keyword in message.text.lower() for keyword in keywords):
-                            print(Fore.YELLOW + f"Found a keyword in message: {message.text}")
+                            print(Fore.YELLOW + f"🔎 Found a keyword in message: {message.text}")
 
                             # Forward the message to the destination channel with the signature
                             await self.client.send_message(destination_channel_id, f"{message.text}\n\n**{signature}**")
 
-                            print(Fore.GREEN + "Message sent with your signature! ✅")
+                            print(Fore.GREEN + "✅ Message sent with your signature!")
                     else:
                             # Forward the message to the destination channel with the signature
                             await self.client.send_message(destination_channel_id, f"{message.text}\n\n**{signature}**")
 
-                            print(Fore.GREEN + "Message sent with your signature! ✅")
+                            print(Fore.GREEN + "✅ Message sent with your signature!")
 
                     # Update the last message ID
                     last_message_ids[chat_id] = max(last_message_ids[chat_id], message.id)
@@ -106,18 +106,11 @@ async def main():
     intro_text = Fore.LIGHTMAGENTA_EX + """
 👋 Welcome to the Soluify Telegram Copy & Paste Bot!
 ====================================================
-
-This tool helps you automatically forward messages from multiple Telegram chats (private or public, groups or channels) to a specified destination chat.
-
-💡 Here's what you can do:
-------------------------
 1. Log in with your API details.
-2. List all your Telegram chat IDs. Note your source and destination IDs.
-3. Set up the bot with the easy prompts.
+2. List all your Telegram chat IDs. (Note your source and destination IDs)
+3. Set up the bot with the provided prompts.
 4. Add custom filters and signatures to your messages.
-5. Sit back and let us handle the rest!
-
-Let's get started! 🚀
+5. Sit back and let us handle the rest! 🧘
 """
 
     print(intro_text)
@@ -129,7 +122,7 @@ Let's get started! 🚀
     if api_id is None or api_hash is None or phone_number is None:
         api_id = input(Fore.LIGHTBLUE_EX + "Please enter your API ID: " + Style.RESET_ALL)
         api_hash = input(Fore.LIGHTBLUE_EX + "Please enter your API Hash: " + Style.RESET_ALL)
-        phone_number = input(Fore.LIGHTBLUE_EX + "Please enter your phone number (e.g., 44736xxxx541): " + Style.RESET_ALL)
+        phone_number = input(Fore.LIGHTBLUE_EX + "Please enter your phone number (e.g., 447123456789): " + Style.RESET_ALL)
         # Write credentials to file for future use
         write_credentials(api_id, api_hash, phone_number)
 

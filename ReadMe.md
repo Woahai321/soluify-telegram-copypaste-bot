@@ -7,6 +7,8 @@ The **Soluify Telegram Copy & Paste Bot** is a versatile Python script designed 
 ## 🌟 Features
 
 - **Keyword-Based Forwarding:** Automatically forward messages containing specific keywords between chats.
+- **Multiple Source Chats:** Copy from more than one source location.
+- **Signature:** Add a signature that appends to the end of every message forwarded.
 - **User-Friendly:** Easy to set up with minimal configuration required.
 - **Real-time Monitoring:** Continuously monitors and forwards messages in real-time.
 
@@ -14,13 +16,19 @@ The **Soluify Telegram Copy & Paste Bot** is a versatile Python script designed 
 
 ## 🛠️ How it Works
 
-The script leverages the [Telethon](https://github.com/LonamiWebs/Telethon) library to interact with the Telegram API. After providing your Telegram API ID, API hash, and phone number for authentication, you can list all your chats and select those for message forwarding. The script then monitors the specified source chat and forwards messages containing any of the specified keywords to the destination chat.
+The script leverages the [Telethon](https://github.com/LonamiWebs/Telethon) library to interact with the Telegram API. After providing your Telegram API ID, API hash, and phone number for authentication, you can list all your chats and select those for message forwarding. You can obtain your API details [Here](https://my.telegram.org/apps). The script then monitors the specified source chat and forwards messages containing any of the specified keywords to the destination chat.
 
 ---
 
 ## 🔑 Keywords
 
 Specify one or more keywords that, if found in a message, will trigger the forwarding process. Keywords are case-insensitive and can be set up during the initial configuration.
+
+---
+
+## ✍️ Signatures
+
+Add a signature in bold to the end of every message that gets forwarded by the script.
 
 ---
 
@@ -39,16 +47,15 @@ Specify one or more keywords that, if found in a message, will trigger the forwa
     pip install -r requirements.txt
     ```
 
-3. **Configure the script:**
-
-    - Open the `SoluifyCopier.py` file and input your Telegram API ID, API hash, and phone number in the designated variables.
-    - Adjust other settings as necessary directly within the script.
-
-4. **Run the script:**
+3. **Run the script:**
 
     ```
     python SoluifyCopier.py
     ```
+
+4. **Fill in the required details when prompted:**
+    - **Add your API ID & Hash:** These can be obtained from [Here](https://my.telegram.org/apps).
+    - **Log into Telegram:** Input your phone number (e.g., 447123456789) & approve with the 5 digit code provided by Telegram.
 
 5. **Choose an option:**
     - **(1) List My Chat IDs:** View and select chats to use for message forwarding.
@@ -73,4 +80,4 @@ For any queries or issues, please reach out to us [here](https://soluify.com/con
 
 ## 📄 License
 
-This project is licensed under the MIT License. See [LICENSE](https://rem.mit-license.org) for more details.
+This project is licensed under the MIT License. See [LICENSE](https://opensource.org/license/mit) for more details.
