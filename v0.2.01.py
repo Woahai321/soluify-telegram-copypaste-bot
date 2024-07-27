@@ -94,7 +94,7 @@ class TelegramForwarder:
                         if message.text:
                             forwarded_text = await self.replace_usernames(message)
                             for dest_id in destination_channel_ids:
-                                await self.client.send_message(dest_id, forwarded_text + f"\n\n**{signature}**")
+                                await self.client.send_message(dest_id, forwarded_text.text + f"\n\n**{signature}**")
                         if message.media:
                             for dest_id in destination_channel_ids:
                                 await self.client.send_file(dest_id, message.media, caption=f"{message.text}\n\n**{signature}**" if message.text else f"**{signature}**")
