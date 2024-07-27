@@ -5,17 +5,9 @@ import random
 from telethon.sync import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 from colorama import init, Fore, Style
-from termcolor import colored
 import sys
 
 init(autoreset=True)
-
-def animate_text(text, delay=0.03):
-    for char in text:
-        sys.stdout.write(char)
-        sys.stdout.flush()
-        time.sleep(delay)
-    print()
 
 def gradient_text(text, start_color, end_color):
     start_r, start_g, start_b = start_color
@@ -49,10 +41,12 @@ class TelegramForwarder:
         dialogs = await self.client.get_dialogs()
         chats_file = open(f"chats_of_{self.phone_number}.txt", "w")
         for dialog in dialogs:
-            print(gradient_text(f"Chat ID: {dialog.id}, Title: {dialog.title}", (0, 255, 255), (0, 128, 128)))
-            chats_file.write(f"Chat ID: {dialog.id}, Title: {dialog.title} \n")
+            chat_info = f"Chat ID: {dialog.id}, Title: {dialog.title}"
+            print(gradient_text(chat_info, (0, 255, 255), (0, 128, 128)))
+            chats_file.write(chat_info + "\n")
+        chats_file.close()
         
-        animate_text(gradient_text("All your chats are listed! 📜", (0, 255, 0), (0, 128, 0)))
+        print(gradient_text("All your chats are listed! 📜", (0, 255, 0), (0, 128, 0)))
 
     async def forward_messages_to_channel(self, source_chat_ids, destination_channel_id, keywords, signature):
         await self.client.connect()
@@ -67,7 +61,7 @@ class TelegramForwarder:
         last_message_ids = {chat_id: (await self.client.get_messages(chat_id, limit=1))[0].id for chat_id in source_chat_ids}
 
         while True:
-            animate_text(gradient_text("👀 Soluify is on the lookout for new messages...", (0, 191, 255), (30, 144, 255)))
+            print(gradient_text("👀 Soluify is on the lookout for new messages...", (0, 191, 255), (30, 144, 255)))
             for chat_id in source_chat_ids:
                 messages = await self.client.get_messages(chat_id, min_id=last_message_ids[chat_id], limit=None)
 
@@ -86,7 +80,7 @@ class TelegramForwarder:
                         if message.media:
                             await self.client.send_file(destination_channel_id, message.media, caption=f"{message.text}\n\n**{signature}**" if message.text else f"**{signature}**")
                         
-                        animate_text(gradient_text("✅ Message forwarded with your signature!", (0, 255, 0), (0, 128, 0)))
+                        print(gradient_text("✅ Message forwarded with your signature!", (0, 255, 0), (0, 128, 0)))
 
                     last_message_ids[chat_id] = max(last_message_ids[chat_id], message.id)
 
@@ -129,23 +123,6 @@ async def main():
         (0, 0, 255), (75, 0, 130), (238, 130, 238)
     ]
 
-    async def rainbow_effect():
-        for _ in range(10):
-            print("\033[H\033[J", end="")
-            for i, line in enumerate(logo_frames):
-                color = colors[i % len(colors)]
-                print(gradient_text(line, color, (255, 255, 255)))
-            await asyncio.sleep(0.1)
-            colors.append(colors.pop(0))
-
-    async def typing_effect():
-        for i in range(len(logo_frames)):
-            print("\033[H\033[J", end="")
-            for j in range(i + 1):
-                color = random.choice(colors)
-                print(gradient_text(logo_frames[j], color, (255, 255, 255)))
-            await asyncio.sleep(0.2)
-
     async def glitch_effect():
         for _ in range(5):
             print("\033[H\033[J", end="")
@@ -154,16 +131,8 @@ async def main():
                 print(gradient_text(glitched_line, random.choice(colors), (255, 255, 255)))
             await asyncio.sleep(0.1)
 
-    # Main animation sequence
-    for _ in range(2):
-        await typing_effect()
-        await asyncio.sleep(0.5)
-        await rainbow_effect()
-        await asyncio.sleep(0.5)
-        await glitch_effect()
-        await asyncio.sleep(0.5)
+    await glitch_effect()
 
-    # Final display
     print("\033[H\033[J", end="")
     for line in logo_frames:
         print(gradient_text(line, (0, 191, 255), (30, 144, 255)))
@@ -204,6 +173,7 @@ async def main():
         destination_channel_id = int(input(gradient_text("Enter the destination chat ID: ", (0, 191, 255), (30, 144, 255))))
         print(gradient_text("Enter keywords to filter messages (optional). Leave blank to forward all messages.", (0, 255, 255), (0, 128, 128)))
         keywords = input(gradient_text("Keywords (comma separated if multiple, or leave blank): ", (0, 191, 255), (30, 144, 255))).split(',')
+        keywords = [keyword.strip() for keyword in keywords if keyword.strip()]
         signature = input(gradient_text("Enter the signature to append to each message: ", (0, 191, 255), (30, 144, 255)))
         
         replace_usernames = input(gradient_text("Do you want to replace usernames in forwarded messages? (y/n): ", (0, 191, 255), (30, 144, 255))).lower() == 'y'
