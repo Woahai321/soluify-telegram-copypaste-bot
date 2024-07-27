@@ -13,11 +13,11 @@ init(autoreset=True)
 
 # Define color schemes
 MAIN_COLOR_START = (147, 112, 219)  # Medium Purple
-MAIN_COLOR_END = (0, 191, 255)     # Deep Sky Blue
-ALERT_COLOR = (255, 69, 0)         # Red-Orange
-SUCCESS_COLOR = (50, 205, 50)      # Lime Green
-PROMPT_COLOR_START = (0, 255, 255) # Cyan
-PROMPT_COLOR_END = (135, 206, 250) # Light Sky Blue
+MAIN_COLOR_END = (0, 191, 255)      # Deep Sky Blue
+ALERT_COLOR = (255, 69, 0)          # Red-Orange
+SUCCESS_COLOR = (50, 205, 50)       # Lime Green
+PROMPT_COLOR_START = (0, 255, 255)  # Cyan
+PROMPT_COLOR_END = (135, 206, 250)  # Light Sky Blue
 
 def gradient_text(text, start_color, end_color):
     start_r, start_g, start_b = start_color
@@ -169,27 +169,6 @@ async def matrix_effect(logo_frames):
         
         await asyncio.sleep(0.1)
 
-async def pixelate_effect(logo_frames):
-    lines = logo_frames
-    max_length = max(len(line) for line in lines)
-    
-    for frame in range(10):
-        clear_percentage = frame / 10
-        pixelated = []
-        for line in lines:
-            new_line = ''
-            for char in line.ljust(max_length):
-                if random.random() < clear_percentage:
-                    new_line += char
-                else:
-                    new_line += random.choice('░▒▓█')
-            pixelated.append(new_line)
-        
-        print("\033[H\033[J", end="")  # Clear screen
-        for line in pixelated:
-            print(gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END))
-        await asyncio.sleep(0.1)
-
 async def main():
     logo_frames = [
         "     ___       _       _  ___     ",
@@ -214,8 +193,7 @@ async def main():
     # Combine both logos into a single list
     combined_art = logo_frames + [""] + copypaste_art
 
-    # Display both logos together
-    await pixelate_effect(combined_art)
+    # Display both logos together using matrix effect
     await matrix_effect(combined_art)
 
     # Final display of both logos
