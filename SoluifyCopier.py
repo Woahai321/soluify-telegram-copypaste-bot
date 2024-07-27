@@ -30,9 +30,9 @@ class TelegramForwarder:
             print(Fore.CYAN + f"Chat ID: {dialog.id}, Title: {dialog.title}")
             chats_file.write(f"Chat ID: {dialog.id}, Title: {dialog.title} \n")
           
-        print(Fore.GREEN + "List of groups printed successfully!")
+        print(Fore.GREEN + "List of groups ready!")
 
-    async def forward_messages_to_channel(self, source_chat_ids, destination_channel_id, keywords):
+    async def forward_messages_to_channel(self, source_chat_ids, destination_channel_id, keywords, signature):
         await self.client.connect()
 
         # Ensure you're authorized
@@ -43,7 +43,7 @@ class TelegramForwarder:
         last_message_ids = {chat_id: (await self.client.get_messages(chat_id, limit=1))[0].id for chat_id in source_chat_ids}
 
         while True:
-            print(Fore.CYAN + "Checking for messages and forwarding them...")
+            print(Fore.CYAN + "👀 SoluifyCopier Scanning & Forwarding Messages...")
             for chat_id in source_chat_ids:
                 # Get new messages since the last checked message
                 messages = await self.client.get_messages(chat_id, min_id=last_message_ids[chat_id], limit=None)
@@ -54,15 +54,15 @@ class TelegramForwarder:
                         if message.text and any(keyword in message.text.lower() for keyword in keywords):
                             print(Fore.YELLOW + f"Message contains a keyword: {message.text}")
 
-                            # Forward the message to the destination channel
-                            await self.client.send_message(destination_channel_id, message.text)
+                            # Forward the message to the destination channel with the signature
+                            await self.client.send_message(destination_channel_id, f"{message.text}\n\n{Style.BRIGHT}{signature}")
 
-                            print(Fore.GREEN + "Message forwarded")
+                            print(Fore.GREEN + "Message forwarded with signature")
                     else:
-                            # Forward the message to the destination channel
-                            await self.client.send_message(destination_channel_id, message.text)
+                            # Forward the message to the destination channel with the signature
+                            await self.client.send_message(destination_channel_id, f"{message.text}\n\n{Style.BRIGHT}{signature}")
 
-                            print(Fore.GREEN + "Message forwarded")
+                            print(Fore.GREEN + "Message forwarded with signature")
 
                     # Update the last message ID
                     last_message_ids[chat_id] = max(last_message_ids[chat_id], message.id)
@@ -102,6 +102,27 @@ async def main():
     """
     print(Fore.LIGHTBLUE_EX + logo)
 
+    # Introductory Text
+    intro_text = Fore.LIGHTMAGENTA_EX + """
+Welcome to the Soluify Telegram Copy & Paste Bot!
+=================================================
+
+This tool allows you to automatically forward messages from multiple Telegram chats (groups or channels) to a specified destination chat. You can set up keyword-based forwarding and even add a custom signature to each forwarded message.
+
+Setup is easy and straightforward. Simply follow the prompts to enter your Telegram API credentials, select your source and destination chats, and specify any keywords you want to filter by.
+
+What to Expect:
+---------------
+1. List all your Telegram chats.
+2. Forward messages from multiple source chats to a destination chat.
+3. Add custom signatures to your forwarded messages.
+4. Real-time monitoring and forwarding of messages.
+
+Let's get started!
+"""
+
+    print(intro_text)
+
     # Attempt to read credentials from file
     api_id, api_hash, phone_number = read_credentials()
 
@@ -129,8 +150,9 @@ async def main():
         destination_channel_id = int(input(Fore.LIGHTBLUE_EX + "Enter the destination chat ID: " + Style.RESET_ALL))
         print(Fore.CYAN + "Enter keywords if you want to forward messages with specific keywords, or leave blank to forward every message!")
         keywords = input(Fore.LIGHTBLUE_EX + "Put keywords (comma separated if multiple, or leave blank): " + Style.RESET_ALL).split(',')
+        signature = input(Fore.LIGHTBLUE_EX + "Enter the signature to append to each message: " + Style.RESET_ALL)
         
-        await forwarder.forward_messages_to_channel(source_chat_ids, destination_channel_id, keywords)
+        await forwarder.forward_messages_to_channel(source_chat_ids, destination_channel_id, keywords, signature)
     else:
         print(Fore.RED + "Invalid choice")
 
