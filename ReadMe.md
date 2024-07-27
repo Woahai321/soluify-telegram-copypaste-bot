@@ -16,7 +16,7 @@ The **Soluify Telegram Copy & Paste Bot** is a versatile Python script designed 
 
 ## 🛠️ How it Works
 
-The script leverages the [Telethon](https://github.com/LonamiWebs/Telethon) library to interact with the Telegram API. After providing your Telegram API ID, API hash, and phone number for authentication, you can list all your chats and select those for message forwarding. You can obtain your API details [Here](https://my.telegram.org/apps). The script then monitors the specified source chat and forwards messages containing any of the specified keywords to the destination chat.
+The script leverages the [Telethon](https://github.com/LonamiWebs/Telethon) library to interact with the Telegram API. After providing your Telegram API ID, API hash, and phone number for authentication, you can list all your chats and select those for message forwarding. You can obtain your API details from you [telegram account](https://my.telegram.org/apps). The script then monitors the specified source chat and forwards messages containing any of the specified keywords to the destination chat.
 
 ---
 
@@ -54,7 +54,7 @@ Add a signature in bold to the end of every message that gets forwarded by the s
     ```
 
 4. **Fill in the required details when prompted:**
-    - **Add your API ID & Hash:** These can be obtained from [Here](https://my.telegram.org/apps).
+    - **Add your API ID & Hash:** These can be obtained from you [telegram account](https://my.telegram.org/apps).
     - **Log into Telegram:** Input your phone number (e.g., 447123456789) & approve with the 5 digit code provided by Telegram.
 
 5. **Choose an option:**

@@ -1,3 +1,10 @@
+# -------------------------------------------------------------------------------
+# Made by Soluify in 2024
+#  __         _   
+# (_  _ |   .(_   
+# __)(_)||_||| \/ 
+#              /
+
 import time
 import asyncio
 from telethon.sync import TelegramClient
