@@ -88,7 +88,7 @@ def read_credentials():
             phone_number = lines[2].strip()
             return api_id, api_hash, phone_number
     except FileNotFoundError:
-        print(Fore.RED + "⚠️ Uh-oh, couldn't find the credentials file.")
+        print(Fore.RED + "Couldn't find the credentials file, if this is running for first time, please log in below:")
         return None, None, None
 
 # Function to write credentials to file
