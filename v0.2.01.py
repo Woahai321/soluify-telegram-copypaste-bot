@@ -228,8 +228,8 @@ async def main():
 
     copypaste_art = """
  __   __   __       __        __  ___  ___ 
-/  ` /  \ |__)  /  |__)  /\  /__`  |  |__  
-\__, \__/ |     \  |    /~~\ .__/  |  |___ 
+/  ` /  \ |__) \ / |__)  /\  /__`  |  |__  
+\__, \__/ |     |  |    /~~\ .__/  |  |___ 
                                            
     """
 
@@ -238,50 +238,57 @@ async def main():
     copypaste_width = max(len(line) for line in copypaste_art.split('\n'))
     total_width = max(logo_width, copypaste_width)
 
-    async def combined_effect():
-        matrix = [[' ' for _ in range(total_width)] for _ in range(total_height)]
+    async def matrix_effect():
+        matrix = [[' ' for _ in range(logo_width)] for _ in range(len(logo_frames))]
         matrix_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?"
         
         for frame in atqdm(range(50), desc="Loading", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=75, colour="magenta"):
             print("\033[H\033[J", end="")  # Clear screen
             
             # Update matrix
-            for col in range(total_width):
+            for col in range(logo_width):
                 if random.random() < 0.2:  # Chance to start a new "drop"
                     matrix[0][col] = random.choice(matrix_chars)
                 
-                for row in range(total_height - 1, 0, -1):
+                for row in range(len(logo_frames) - 1, 0, -1):
                     matrix[row][col] = matrix[row-1][col]
                 
                 if matrix[0][col] != ' ':
                     matrix[0][col] = random.choice(matrix_chars)
             
-            # Print matrix with logo and copypaste overlay
-            for row in range(total_height):
+            # Print matrix with logo overlay
+            for row in range(len(logo_frames)):
                 line = ''
-                for col in range(total_width):
-                    char = matrix[row][col]
-                    color = (0, 0, 255)  # Default blue
-
-                    if row < len(logo_frames) and col < len(logo_frames[row]) and logo_frames[row][col] != ' ':
+                for col in range(logo_width):
+                    if logo_frames[row][col] != ' ':
                         char = logo_frames[row][col]
                         color = (
                             int(75 + (0 - 75) * frame / 49),  # R
                             int(0 + (191 - 0) * frame / 49),  # G
                             int(130 + (255 - 130) * frame / 49)  # B
                         )
-                    elif row >= len(logo_frames) + 1:
-                        copypaste_row = row - len(logo_frames) - 1
-                        if copypaste_row < len(copypaste_art.split('\n')) and col < len(copypaste_art.split('\n')[copypaste_row]) and copypaste_art.split('\n')[copypaste_row][col] != ' ':
-                            char = copypaste_art.split('\n')[copypaste_row][col]
-                            color = (75, 0, 130)  # Purple for copypaste art
-                    
+                    else:
+                        char = matrix[row][col]
+                        color = (0, 0, 255)  # Blue for matrix
                     line += gradient_text(char, color, color)
                 print(line)
             
+            # Print copypaste art with pixelate effect
+            print()  # Separation line
+            copypaste_lines = copypaste_art.split('\n')
+            clear_percentage = frame / 49
+            for line in copypaste_lines:
+                pixelated_line = ''
+                for char in line:
+                    if random.random() < clear_percentage:
+                        pixelated_line += char
+                    else:
+                        pixelated_line += random.choice('░▒▓█')
+                print(gradient_text(pixelated_line, (0, 0, 255), (0, 191, 255)))  # Blue gradient for copypaste
+            
             await asyncio.sleep(0.1)
 
-    await combined_effect()
+    await matrix_effect()
 
     # Final display of both logos
     print("\033[H\033[J", end="")  # Clear screen
@@ -289,7 +296,7 @@ async def main():
         print(gradient_text(line, (0, 191, 255), (0, 191, 255)))  # Deep Sky Blue color for Soluify
     print()  # Add a blank line for separation
     for line in copypaste_art.split('\n'):
-        print(gradient_text(line, (75, 0, 130), (75, 0, 130)))  # Purple for COPYPASTE
+        print(gradient_text(line, (0, 191, 255), (0, 191, 255)))  # Deep Sky Blue color for COPYPASTE
 
     intro_text = gradient_text("""
 👋 Welcome to the Soluify Telegram Copy & Paste Bot!
