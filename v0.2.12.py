@@ -211,16 +211,16 @@ async def main():
     copypaste_width = max(len(line) for line in copypaste_art)
     total_width = max(logo_width, copypaste_width)
 
+    # Combine both logos into a single list
+    combined_art = logo_frames + [""] + copypaste_art
+
     # Display both logos together
-    await pixelate_effect(logo_frames)
-    await matrix_effect(copypaste_art)
+    await pixelate_effect(combined_art)
+    await matrix_effect(combined_art)
 
     # Final display of both logos
     print("\033[H\033[J", end="")  # Clear screen
-    for line in logo_frames:
-        print(gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END))
-    print()  # Add a blank line for separation
-    for line in copypaste_art:
+    for line in combined_art:
         print(gradient_text(line, MAIN_COLOR_START, MAIN_COLOR_END))
 
     intro_text = gradient_text("""
