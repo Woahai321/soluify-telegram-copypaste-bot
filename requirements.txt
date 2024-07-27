@@ -1,4 +1,4 @@
 telethon
 colorama
 pyfiglet
-
+termcolor
