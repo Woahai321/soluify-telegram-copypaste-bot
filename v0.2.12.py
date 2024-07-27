@@ -149,7 +149,7 @@ async def matrix_effect(logo_frames):
         for row in range(logo_height):
             line = ''
             for col in range(logo_width):
-                if logo_frames[row][col] != ' ' and col < len(logo_frames[row]):
+                if col < len(logo_frames[row]) and logo_frames[row][col] != ' ':
                     char = logo_frames[row][col]
                     # Gradually change from purple to blue
                     color = (
