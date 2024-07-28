@@ -15,7 +15,7 @@ Welcome to the **Soluify Telegram Copy & Paste Bot**! 🎉 This isn't just any b
 - **User-Friendly:** No PhD in rocket science required here—set up is a breeze with minimal configuration needed.
 - **Real-time Monitoring:** Stay on top of everything with continuous real-time message monitoring and forwarding.
 - **It Just Works:** While other solutions might be clunky or confusing, this bot is straightforward and reliable.
-- **& It Looks Nice:** Running this on a Linux OS will treat you to our beautiful color theme. Eye candy for the win! 🌈
+- **& It Looks Nice:** Running this on a Linux will treat you to our beautiful color theme. Eye candy for the win! 🌈
 
 ---
 
