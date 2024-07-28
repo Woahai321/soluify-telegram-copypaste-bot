@@ -3,9 +3,10 @@
 ![Soluify Bot Logo](https://share.woahlab.com/-vXC6zguKx2)
 [![Website](https://img.shields.io/website?label=soluify.com&style=plastic&url=https%3A%2F%2Fsoluify.com)](https://soluify.com/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?style=plastic&logo=linkedin)](https://www.linkedin.com/company/soluify)
-![Soluify Bot In Action](https://share.woahlab.com/-aFyvV8sDmQ)
+
 Welcome to the **Soluify Telegram Copy & Paste Bot**! 🎉 This isn't just any bot—this is your new best friend in automating Telegram message management. Imagine having a super-efficient assistant that forwards messages between Telegram chats based on your specified keywords. Whether you're the mastermind behind multiple community groups, a diligent update tracker, or someone who just loves a bit of automation magic, this bot is here to make your life easier. Let's dive in!
 
+![Soluify Bot In Action](https://share.woahlab.com/-aFyvV8sDmQ)
 ---
 
 ## 🌟 Features
