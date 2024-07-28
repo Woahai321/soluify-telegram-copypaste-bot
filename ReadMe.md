@@ -49,7 +49,7 @@ cd soluify-telegram-copypaste-bot
 pip install -r requirements.txt
 
 # Run the script
-python soluifycopier.py
+python SoluifyCopier.py
 ```
 
 ### Configuration
