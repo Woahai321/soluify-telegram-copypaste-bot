@@ -6,6 +6,9 @@
 
 Welcome to the **Soluify Telegram Copy & Paste Bot**! 🎉 This isn't just any bot—this is your new best friend in automating Telegram message management. Imagine having a super-efficient assistant that forwards messages between Telegram chats based on your specified keywords. Whether you're the mastermind behind multiple community groups, a diligent update tracker, or someone who just loves a bit of automation magic, this bot is here to make your life easier. Let's dive in!
 
+---
+## 🎬 Demo
+
 ![Soluify Bot In Action](https://share.woahlab.com/-aFyvV8sDmQ)
 ---
 
@@ -63,8 +66,11 @@ python SoluifyCopier.py
 
 2. **Choose an option:**
     - **(1) List My Chat IDs:** View and select chats for message forwarding.
-    - **(2) Configure Forwarding Messages:** Input the source chat ID, destination chat ID, and keywords to get the message forwarding party started.
-
+    - **(2) Configure Forwarding Messages:**
+        - Input the source chat IDs and destination chat IDs.
+        - Configure any keywords the bot should look out for and forward on (leave blank to forward all messages).
+        - Enter a signature to be appended to the end of every message forwarded by the bot.
+        - Add any blacklisted words or characters.
 ---
 
 ## 📋 Notes
