@@ -92,7 +92,7 @@ We love contributions! Here's how you can join the fun:
 
 ## 📄 License
 
-This project is licensed under the [MIT License](https://opensource.org/license/mit). Check out the LICENSE file for more details.
+This project is licensed under the [MIT License](https://opensource.org/license/mit). Check out the LICENSE link for more details.
 
 ---
 
