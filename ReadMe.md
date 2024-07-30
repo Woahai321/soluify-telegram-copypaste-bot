@@ -70,6 +70,24 @@ python SoluifyCopier.py
         - Configure any keywords the bot should look out for and forward on (leave blank for all messages).
         - Enter a signature to be appended to the end of every message forwarded by the bot.
         - Add any blacklisted words or characters.
+
+---
+
+## 🚀 Roadmap
+
+### Short-term
+1. [ ] **Error Handling and Graceful Failures:** Implement robust error handling to manage unexpected issues gracefully.
+2. [ ] **User Profiles:** Allow users to save their configurations as profiles for easier reuse.
+3. [ ] **Media Support:** Enhance media handling capabilities to support a wider range of file types.
+
+### Mid-term
+4. [ ] **Web Interface:** Develop a web-based interface for easier bot management.
+5. [ ] **Performance Optimization:** Continuously optimize the bot's performance to handle large volumes of messages efficiently.
+6. [ ] **Theming and Customization:** Allow users to customize the bot's appearance and color scheme.
+
+### Long-term
+7. [ ] **Documentation and Tutorials:** Expand documentation and provide tutorials to help users make the most of the bot's features.
+
 ---
 
 ## 📋 Notes
