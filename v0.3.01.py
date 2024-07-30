@@ -20,8 +20,6 @@ from telethon.errors import SessionPasswordNeededError, FloodWaitError, RPCError
 from colorama import init, Fore, Style
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as atqdm
-from prompt_toolkit import PromptSession
-from prompt_toolkit.patch_stdout import patch_stdout
 
 init(autoreset=True)
 
@@ -72,9 +70,9 @@ class TelegramForwarder:
         if not await self.client.is_user_authorized():
             await self.client.send_code_request(self.phone_number)
             try:
-                await self.client.sign_in(self.phone_number, await prompt_async(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
+                await self.client.sign_in(self.phone_number, input(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
             except SessionPasswordNeededError:
-                await self.client.sign_in(password=await prompt_async(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
+                await self.client.sign_in(password=input(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
 
         dialogs = await self.client.get_dialogs()
         
@@ -94,9 +92,9 @@ class TelegramForwarder:
             if not await self.client.is_user_authorized():
                 await self.client.send_code_request(self.phone_number)
                 try:
-                    await self.client.sign_in(self.phone_number, await prompt_async(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
+                    await self.client.sign_in(self.phone_number, input(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
                 except SessionPasswordNeededError:
-                    await self.client.sign_in(password=await prompt_async(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
+                    await self.client.sign_in(password=input(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
 
             last_message_ids = {chat_id: (await self.client.get_messages(chat_id, limit=1))[0].id for chat_id in source_chat_ids}
 
@@ -215,11 +213,6 @@ async def matrix_effect(logo_frames):
         
         await asyncio.sleep(0.1)
 
-async def prompt_async(message):
-    session = PromptSession()
-    with patch_stdout():
-        return await session.prompt_async(message)
-
 async def main():
     logo_frames = [
         "  _____  ___   _      __ __  ____  _____  __ __ ",
@@ -271,9 +264,9 @@ async def main():
     api_id, api_hash, phone_number = read_credentials()
 
     if api_id is None or api_hash is None or phone_number is None:
-        api_id = await prompt_async(gradient_text("Please enter your API ID: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
-        api_hash = await prompt_async(gradient_text("Please enter your API Hash: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
-        phone_number = await prompt_async(gradient_text("Please enter your phone number (e.g., 447123456789): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        api_id = input(gradient_text("Please enter your API ID: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        api_hash = input(gradient_text("Please enter your API Hash: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        phone_number = input(gradient_text("Please enter your phone number (e.g., 447123456789): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
         write_credentials(api_id, api_hash, phone_number)
 
     client = TelegramClient('session_' + phone_number, api_id, api_hash)
@@ -284,9 +277,9 @@ async def main():
         print(gradient_text("Available profiles:", MAIN_COLOR_START, MAIN_COLOR_END))
         for idx, profile_name in enumerate(profiles):
             print(gradient_text(f"{idx + 1}. {profile_name}", MAIN_COLOR_START, MAIN_COLOR_END))
-        choice = await prompt_async(gradient_text("Do you want to use a profile? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        choice = input(gradient_text("Do you want to use a profile? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
         if choice.lower() == 'y':
-            profile_idx = int(await prompt_async(gradient_text("Enter the profile number: ", PROMPT_COLOR_START, PROMPT_COLOR_END))) - 1
+            profile_idx = int(input(gradient_text("Enter the profile number: ", PROMPT_COLOR_START, PROMPT_COLOR_END))) - 1
             profile_name = list(profiles.keys())[profile_idx]
             config = profiles[profile_name]
             source_chat_ids = config['source_chat_ids']
@@ -295,18 +288,18 @@ async def main():
             signature = config['signature']
             blacklist = config['blacklist']
         else:
-            source_chat_ids = (await prompt_async(gradient_text("Enter the source chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END))).split(',')
+            source_chat_ids = input(gradient_text("Enter the source chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
             source_chat_ids = [int(chat_id.strip()) for chat_id in source_chat_ids]
-            destination_channel_ids = (await prompt_async(gradient_text("Enter the destination chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END))).split(',')
+            destination_channel_ids = input(gradient_text("Enter the destination chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
             destination_channel_ids = [int(chat_id.strip()) for chat_id in destination_channel_ids]
-            keywords = (await prompt_async(gradient_text("Enter keywords to filter messages (optional). Leave blank to forward all messages: ", PROMPT_COLOR_START, PROMPT_COLOR_END))).split(',')
+            keywords = input(gradient_text("Enter keywords to filter messages (optional). Leave blank to forward all messages: ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
             keywords = [keyword.strip() for keyword in keywords if keyword.strip()]
-            signature = await prompt_async(gradient_text("Enter the signature to append to each message: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
-            blacklist = (await prompt_async(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", PROMPT_COLOR_START, PROMPT_COLOR_END))).split(',')
+            signature = input(gradient_text("Enter the signature to append to each message: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+            blacklist = input(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
             blacklist = [word.strip().lower() for word in blacklist if word.strip()]
-            save_choice = await prompt_async(gradient_text("Do you want to save this configuration as a profile? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+            save_choice = input(gradient_text("Do you want to save this configuration as a profile? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
             if save_choice.lower() == 'y':
-                profile_name = await prompt_async(gradient_text("Enter a name for this profile: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+                profile_name = input(gradient_text("Enter a name for this profile: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
                 save_profile(profile_name, {
                     'source_chat_ids': source_chat_ids,
                     'destination_channel_ids': destination_channel_ids,
@@ -315,18 +308,18 @@ async def main():
                     'blacklist': blacklist
                 })
     else:
-        source_chat_ids = (await prompt_async(gradient_text("Enter the source chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END))).split(',')
+        source_chat_ids = input(gradient_text("Enter the source chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
         source_chat_ids = [int(chat_id.strip()) for chat_id in source_chat_ids]
-        destination_channel_ids = (await prompt_async(gradient_text("Enter the destination chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END))).split(',')
+        destination_channel_ids = input(gradient_text("Enter the destination chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
         destination_channel_ids = [int(chat_id.strip()) for chat_id in destination_channel_ids]
-        keywords = (await prompt_async(gradient_text("Enter keywords to filter messages (optional). Leave blank to forward all messages: ", PROMPT_COLOR_START, PROMPT_COLOR_END))).split(',')
+        keywords = input(gradient_text("Enter keywords to filter messages (optional). Leave blank to forward all messages: ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
         keywords = [keyword.strip() for keyword in keywords if keyword.strip()]
-        signature = await prompt_async(gradient_text("Enter the signature to append to each message: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
-        blacklist = (await prompt_async(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", PROMPT_COLOR_START, PROMPT_COLOR_END))).split(',')
+        signature = input(gradient_text("Enter the signature to append to each message: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        blacklist = input(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
         blacklist = [word.strip().lower() for word in blacklist if word.strip()]
-        save_choice = await prompt_async(gradient_text("Do you want to save this configuration as a profile? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        save_choice = input(gradient_text("Do you want to save this configuration as a profile? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
         if save_choice.lower() == 'y':
-            profile_name = await prompt_async(gradient_text("Enter a name for this profile: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+            profile_name = input(gradient_text("Enter a name for this profile: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
             save_profile(profile_name, {
                 'source_chat_ids': source_chat_ids,
                 'destination_channel_ids': destination_channel_ids,
@@ -342,7 +335,7 @@ async def main():
     print(gradient_text("1. List My Chat IDs 📋", PROMPT_COLOR_START, PROMPT_COLOR_END))
     print(gradient_text("2. Set Up Message Forwarding ⚙️", PROMPT_COLOR_START, PROMPT_COLOR_END))
     
-    choice = await prompt_async(gradient_text("Pick an option (1 or 2): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+    choice = input(gradient_text("Pick an option (1 or 2): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
     
     if choice == "1":
         await animated_transition("Listing chats")
