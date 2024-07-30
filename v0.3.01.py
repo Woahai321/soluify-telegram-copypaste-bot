@@ -21,7 +21,7 @@ from colorama import init, Fore, Style
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as atqdm
 from prompt_toolkit import PromptSession
-from prompt_toolkit.eventloop import use_asyncio_event_loop
+from prompt_toolkit.patch_stdout import patch_stdout
 
 init(autoreset=True)
 
@@ -217,7 +217,8 @@ async def matrix_effect(logo_frames):
 
 async def prompt_async(message):
     session = PromptSession()
-    return await session.prompt_async(message)
+    with patch_stdout():
+        return await session.prompt_async(message)
 
 async def main():
     logo_frames = [
@@ -353,6 +354,5 @@ async def main():
         print(gradient_text("❌ Oops! That's not a valid choice.", ALERT_COLOR, ALERT_COLOR))
 
 if __name__ == "__main__":
-    use_asyncio_event_loop()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
