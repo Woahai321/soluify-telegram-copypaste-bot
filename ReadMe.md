@@ -76,17 +76,18 @@ python SoluifyCopier.py
 ## 🚀 Roadmap
 
 ### Short-term
-1. [ ] **Error Handling and Graceful Failures:** Implement robust error handling to manage unexpected issues gracefully.
-2. [ ] **User Profiles:** Allow users to save their configurations as profiles for easier reuse.
+1. [x] **Error Handling and Graceful Failures:** Implement robust error handling to manage unexpected issues gracefully.
+2. [x] **User Profiles:** Allow users to save their configurations as profiles for easier reuse.
 3. [ ] **Media Support:** Enhance media handling capabilities to support a wider range of file types.
+4. [ ] **Additional Security Provisions:** Improve the general security of how the script saves API credentials for future use.
 
 ### Mid-term
-4. [ ] **Web Interface:** Develop a web-based interface for easier bot management.
-5. [ ] **Performance Optimization:** Continuously optimize the bot's performance to handle large volumes of messages efficiently.
-6. [ ] **Theming and Customization:** Allow users to customize the bot's appearance and color scheme.
+5. [ ] **Web Interface:** Develop a web-based interface for easier bot management.
+6. [ ] **Performance Optimization:** Continuously optimize the bot's performance to handle large volumes of messages efficiently.
+7. [ ] **Theming and Customization:** Allow users to customize the bot's appearance and color scheme.
 
 ### Long-term
-7. [ ] **Documentation and Tutorials:** Expand documentation and provide tutorials to help users make the most of the bot's features.
+8. [ ] **Documentation and Tutorials:** Expand documentation and provide tutorials to help users make the most of the bot's features.
 
 ---
 
