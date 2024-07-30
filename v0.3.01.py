@@ -348,4 +348,5 @@ async def main():
         print(gradient_text("❌ Oops! That's not a valid choice.", ALERT_COLOR, ALERT_COLOR))
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
