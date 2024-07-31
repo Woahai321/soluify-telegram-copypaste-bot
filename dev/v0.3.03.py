@@ -111,6 +111,10 @@ def store_credentials(api_id, api_hash, phone_number):
         print(gradient_text("Operation cancelled. Exiting for your security.", MAIN_COLOR_START, MAIN_COLOR_END))
         exit()
 
+    api_id = getpass.getpass(gradient_text("Please enter your API ID: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+    api_hash = getpass.getpass(gradient_text("Please enter your API Hash: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+    phone_number = input(gradient_text("Please enter your phone number (e.g., 447123456789): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+
     save_choice = input(gradient_text("Do you wish to save your login credentials for future use (stay signed in)? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
     print(gradient_text("From a security perspective, saving credentials is not recommended.", ALERT_COLOR, ALERT_COLOR, "⚠️"))
     
