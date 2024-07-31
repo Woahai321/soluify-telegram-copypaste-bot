@@ -7,8 +7,9 @@ import json
 import signal
 import logging
 import os
+import select
 from datetime import datetime
-from telethon.sync import TelegramClient
+from telethon import TelegramClient, events
 from telethon.errors import SessionPasswordNeededError, FloodWaitError, RPCError, ChatForwardsRestrictedError
 from colorama import init, Fore, Style
 from tqdm import tqdm
@@ -32,6 +33,9 @@ PROMPT_COLOR_END = (135, 206, 250)  # Light Sky Blue
 CONFIG_FILE = 'telegramconfiguration.json'
 CREDENTIALS_FILE = 'credentials.json'
 LOG_FILE = 'soluify.log'
+
+MAX_RETRIES = 3
+RETRY_DELAY = 5
 
 def setup_logger():
     logger = logging.getLogger('soluify')
@@ -148,16 +152,30 @@ class TelegramForwarder:
         self.client = client
         self.phone_number = phone_number
         self.blacklist = []
+        self.running = False
+
+    async def connect_with_retry(self):
+        for attempt in range(MAX_RETRIES):
+            try:
+                await self.client.connect()
+                if not await self.client.is_user_authorized():
+                    await self.client.send_code_request(self.phone_number)
+                    try:
+                        await self.client.sign_in(self.phone_number, getpass.getpass(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
+                    except SessionPasswordNeededError:
+                        await self.client.sign_in(password=getpass.getpass(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
+                print(gradient_text("Successfully connected to Telegram!", SUCCESS_COLOR, SUCCESS_COLOR, "✅"))
+                return True
+            except Exception as e:
+                logger.error(f"Connection attempt {attempt + 1} failed: {e}")
+                print(gradient_text(f"Connection attempt {attempt + 1} failed. Retrying in {RETRY_DELAY} seconds...", ALERT_COLOR, ALERT_COLOR))
+                await asyncio.sleep(RETRY_DELAY)
+        print(gradient_text(f"Failed to connect after {MAX_RETRIES} attempts. Please check your internet connection and try again.", ALERT_COLOR, ALERT_COLOR))
+        return False
 
     async def list_chats(self):
-        await self.client.connect()
-
-        if not await self.client.is_user_authorized():
-            await self.client.send_code_request(self.phone_number)
-            try:
-                await self.client.sign_in(self.phone_number, getpass.getpass(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
-            except SessionPasswordNeededError:
-                await self.client.sign_in(password=getpass.getpass(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
+        if not await self.connect_with_retry():
+            return
 
         dialogs = await self.client.get_dialogs()
         
@@ -171,21 +189,26 @@ class TelegramForwarder:
         print(gradient_text("All your chats are listed! Time to choose your favorites!", SUCCESS_COLOR, SUCCESS_COLOR, "🎉"))
 
     async def forward_messages_to_channels(self, source_chat_ids, destination_channel_ids, keywords, signature):
-        try:
-            await self.client.connect()
+        if not await self.connect_with_retry():
+            return
 
-            if not await self.client.is_user_authorized():
-                await self.client.send_code_request(self.phone_number)
-                try:
-                    await self.client.sign_in(self.phone_number, getpass.getpass(gradient_text('Enter the code: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
-                except SessionPasswordNeededError:
-                    await self.client.sign_in(password=getpass.getpass(gradient_text('Two step verification is enabled. Please enter your password: ', PROMPT_COLOR_START, PROMPT_COLOR_END)))
+        self.running = True
+        last_message_ids = {chat_id: (await self.client.get_messages(chat_id, limit=1))[0].id for chat_id in source_chat_ids}
 
-            last_message_ids = {chat_id: (await self.client.get_messages(chat_id, limit=1))[0].id for chat_id in source_chat_ids}
+        while self.running:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(gradient_text(f"[{timestamp}] Soluify is on the lookout for new messages...", MAIN_COLOR_START, MAIN_COLOR_END, "👀"))
+            print(gradient_text("Type 'exit' and press Enter to stop forwarding and return to the main menu.", MAIN_COLOR_START, MAIN_COLOR_END))
 
-            while True:
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                print(gradient_text(f"[{timestamp}] Soluify is on the lookout for new messages...", MAIN_COLOR_START, MAIN_COLOR_END, "👀"))
+            # Check for user input to exit
+            if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+                line = input().strip()
+                if line.lower() == 'exit':
+                    print(gradient_text("Stopping message forwarding...", MAIN_COLOR_START, MAIN_COLOR_END))
+                    self.running = False
+                    break
+
+            try:
                 for chat_id in source_chat_ids:
                     messages = await self.client.get_messages(chat_id, min_id=last_message_ids[chat_id], limit=None)
 
@@ -213,18 +236,18 @@ class TelegramForwarder:
 
                         last_message_ids[chat_id] = max(last_message_ids[chat_id], message.id)
 
-                await asyncio.sleep(5)
-        except FloodWaitError as e:
-            logger.error(f"Flood wait error: {e}. Waiting for {e.seconds} seconds before retrying.")
-            print(gradient_text(f"Whoa there! Flood wait error: {e}. Taking a {e.seconds} second breather before we dive back in!", ALERT_COLOR, ALERT_COLOR))
-            await asyncio.sleep(e.seconds)
-            await self.forward_messages_to_channels(source_chat_ids, destination_channel_ids, keywords, signature)
-        except RPCError as e:
-            logger.error(f"RPC error: {e}")
-            print(gradient_text(f"RPC error: {e}. Let's check those internet pipes and try again!", ALERT_COLOR, ALERT_COLOR))
-        except Exception as e:
-            logger.error(f"Unexpected error: {e}")
-            print(gradient_text(f"Unexpected twist in our adventure: {e}", ALERT_COLOR, ALERT_COLOR))
+            except FloodWaitError as e:
+                logger.error(f"Flood wait error: {e}. Waiting for {e.seconds} seconds before retrying.")
+                print(gradient_text(f"Whoa there! Flood wait error: {e}. Taking a {e.seconds} second breather before we dive back in!", ALERT_COLOR, ALERT_COLOR))
+                await asyncio.sleep(e.seconds)
+            except RPCError as e:
+                logger.error(f"RPC error: {e}")
+                print(gradient_text(f"RPC error: {e}. Let's check those internet pipes and try again!", ALERT_COLOR, ALERT_COLOR))
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                print(gradient_text(f"Unexpected twist in our adventure: {e}", ALERT_COLOR, ALERT_COLOR))
+
+            await asyncio.sleep(5)
 
 def load_profiles():
     try:
@@ -238,6 +261,33 @@ def save_profile(profile_name, config):
     profiles[profile_name] = config
     with open(CONFIG_FILE, 'w') as file:
         json.dump(profiles, file, indent=4)
+
+def edit_profile(profile_name):
+    profiles = load_profiles()
+    if profile_name not in profiles:
+        print(gradient_text(f"Profile '{profile_name}' not found.", ALERT_COLOR, ALERT_COLOR))
+        return
+
+    config = profiles[profile_name]
+    print(gradient_text(f"Editing profile: {profile_name}", MAIN_COLOR_START, MAIN_COLOR_END))
+    
+    config['source_chat_ids'] = input(gradient_text("Enter the source chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
+    config['source_chat_ids'] = [int(chat_id.strip()) for chat_id in config['source_chat_ids']]
+    
+    config['destination_channel_ids'] = input(gradient_text("Enter the destination chat IDs (comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
+    config['destination_channel_ids'] = [int(chat_id.strip()) for chat_id in config['destination_channel_ids']]
+    
+    config['keywords'] = input(gradient_text("Enter keywords to filter messages (optional, comma separated): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
+    config['keywords'] = [keyword.strip() for keyword in config['keywords'] if keyword.strip()]
+    
+    config['signature'] = input(gradient_text("Enter the signature to append to each message: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+    
+    config['blacklist'] = input(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
+    config['blacklist'] = [word.strip().lower() for word in config['blacklist'] if word.strip()]
+
+    profiles[profile_name] = config
+    save_profile(profile_name, config)
+    print(gradient_text(f"Profile '{profile_name}' has been updated.", SUCCESS_COLOR, SUCCESS_COLOR, "✅"))
 
 async def graceful_shutdown(credentials_saved, phone_number):
     if not credentials_saved:
@@ -265,6 +315,35 @@ async def graceful_shutdown(credentials_saved, phone_number):
 
     # Add a final confirmation before exiting
     input(gradient_text("Press Enter to exit the script...", PROMPT_COLOR_START, PROMPT_COLOR_END))
+
+async def display_help():
+    help_text = """
+    🌟 Soluify Telegram Copy & Paste Bot Help 🌟
+    ===========================================
+    
+    1. List Chats: 
+       - Displays all your Telegram chats and their IDs.
+       - Use these IDs to set up source and destination chats.
+
+    2. Set Up Message Forwarding:
+       - Configure the bot to forward messages from source to destination chats.
+       - You can set keywords to filter messages and add a signature.
+
+    3. Edit Profile:
+       - Modify existing configuration profiles.
+
+    4. Exit:
+       - Safely close the application, with options to save or delete credentials.
+
+    💡 Tips:
+    - Always keep your API credentials secure.
+    - Use keywords to filter messages effectively.
+    - Remember to type 'exit' when you want to stop message forwarding.
+
+    If you need more help, feel free to reach out to our support team!
+    """
+    print(gradient_text(help_text, MAIN_COLOR_START, MAIN_COLOR_END))
+    input(gradient_text("Press Enter to return to the main menu...", PROMPT_COLOR_START, PROMPT_COLOR_END))
 
 async def matrix_effect(logo_frames):
     logo_width = max(len(line) for line in logo_frames)
@@ -366,42 +445,57 @@ Welcome to the Soluify Telegram Copy & Paste Bot!
     client = TelegramClient('session_' + phone_number, api_id, api_hash)
     forwarder = TelegramForwarder(client, phone_number)
 
-    profiles = load_profiles()
-    if profiles:
-        print(gradient_text("Available profiles:", MAIN_COLOR_START, MAIN_COLOR_END, "🎭"))
-        for idx, profile_name in enumerate(profiles):
-            print(gradient_text(f"{idx + 1}. {profile_name}", MAIN_COLOR_START, MAIN_COLOR_END))
-        choice = input(gradient_text("Do you want to use a profile? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
-        if choice.lower() == 'y':
-            profile_idx = int(input(gradient_text("Enter the profile number: ", PROMPT_COLOR_START, PROMPT_COLOR_END))) - 1
-            profile_name = list(profiles.keys())[profile_idx]
-            config = profiles[profile_name]
-            source_chat_ids = config['source_chat_ids']
-            destination_channel_ids = config['destination_channel_ids']
-            keywords = config['keywords']
-            signature = config['signature']
-            blacklist = config['blacklist']
-        else:
-            source_chat_ids, destination_channel_ids, keywords, signature, blacklist = get_new_config()
-    else:
-        source_chat_ids, destination_channel_ids, keywords, signature, blacklist = get_new_config()
-
     while True:
         print(gradient_text("\nWhat's your mission for today?", MAIN_COLOR_START, MAIN_COLOR_END, "🕵️"))
         print(gradient_text("1. List My Chat IDs", PROMPT_COLOR_START, PROMPT_COLOR_END, "📋"))
         print(gradient_text("2. Set Up Message Forwarding", PROMPT_COLOR_START, PROMPT_COLOR_END, "⚙️"))
-        print(gradient_text("3. Exit", PROMPT_COLOR_START, PROMPT_COLOR_END, "👋"))
+        print(gradient_text("3. Edit Profile", PROMPT_COLOR_START, PROMPT_COLOR_END, "✏️"))
+        print(gradient_text("4. Help", PROMPT_COLOR_START, PROMPT_COLOR_END, "❓"))
+        print(gradient_text("5. Exit", PROMPT_COLOR_START, PROMPT_COLOR_END, "👋"))
         
-        choice = input(gradient_text("Pick your adventure (1, 2, or 3): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+        choice = input(gradient_text("Pick your adventure (1-5): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
         
         try:
             if choice == "1":
                 await animated_transition("Unveiling your chat universe")
                 await forwarder.list_chats()
             elif choice == "2":
+                profiles = load_profiles()
+                if profiles:
+                    use_profile = input(gradient_text("Do you want to use a saved profile? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
+                    if use_profile.lower() == 'y':
+                        print(gradient_text("Available profiles:", MAIN_COLOR_START, MAIN_COLOR_END, "🎭"))
+                        for idx, profile_name in enumerate(profiles):
+                            print(gradient_text(f"{idx + 1}. {profile_name}", MAIN_COLOR_START, MAIN_COLOR_END))
+                        profile_idx = int(input(gradient_text("Enter the profile number: ", PROMPT_COLOR_START, PROMPT_COLOR_END))) - 1
+                        profile_name = list(profiles.keys())[profile_idx]
+                        config = profiles[profile_name]
+                        source_chat_ids = config['source_chat_ids']
+                        destination_channel_ids = config['destination_channel_ids']
+                        keywords = config['keywords']
+                        signature = config['signature']
+                        blacklist = config['blacklist']
+                    else:
+                        source_chat_ids, destination_channel_ids, keywords, signature, blacklist = get_new_config()
+                else:
+                    source_chat_ids, destination_channel_ids, keywords, signature, blacklist = get_new_config()
+                
                 await animated_transition("Preparing the message wormhole")
                 await forwarder.forward_messages_to_channels(source_chat_ids, destination_channel_ids, keywords, signature)
             elif choice == "3":
+                profiles = load_profiles()
+                if profiles:
+                    print(gradient_text("Available profiles:", MAIN_COLOR_START, MAIN_COLOR_END, "🎭"))
+                    for idx, profile_name in enumerate(profiles):
+                        print(gradient_text(f"{idx + 1}. {profile_name}", MAIN_COLOR_START, MAIN_COLOR_END))
+                    profile_idx = int(input(gradient_text("Enter the profile number to edit: ", PROMPT_COLOR_START, PROMPT_COLOR_END))) - 1
+                    profile_name = list(profiles.keys())[profile_idx]
+                    edit_profile(profile_name)
+                else:
+                    print(gradient_text("No profiles found. Create a new profile in 'Set Up Message Forwarding'.", ALERT_COLOR, ALERT_COLOR))
+            elif choice == "4":
+                await display_help()
+            elif choice == "5":
                 await graceful_shutdown(credentials_saved, phone_number)
                 break
             else:
