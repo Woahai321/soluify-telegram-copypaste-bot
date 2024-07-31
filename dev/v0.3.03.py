@@ -101,6 +101,7 @@ def decrypt_data(encrypted_data, password):
     return json.loads(f.decrypt(encrypted_data).decode())
 
 def store_credentials(api_id, api_hash, phone_number):
+    # Display the security warning first
     print(gradient_text("SECURITY WARNING", ALERT_COLOR, ALERT_COLOR, "🚨"))
     print(gradient_text("You are about to interact with your API credentials for your Telegram account.", ALERT_COLOR, ALERT_COLOR))
     print(gradient_text("These should be treated with the same level of security as your bank details.", ALERT_COLOR, ALERT_COLOR))
@@ -111,6 +112,7 @@ def store_credentials(api_id, api_hash, phone_number):
         print(gradient_text("Operation cancelled. Exiting for your security.", MAIN_COLOR_START, MAIN_COLOR_END))
         exit()
 
+    # Now prompt for the API details
     api_id = getpass.getpass(gradient_text("Please enter your API ID: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
     api_hash = getpass.getpass(gradient_text("Please enter your API Hash: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
     phone_number = input(gradient_text("Please enter your phone number (e.g., 447123456789): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
