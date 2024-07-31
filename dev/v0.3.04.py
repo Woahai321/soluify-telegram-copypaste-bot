@@ -289,11 +289,11 @@ def edit_profile(profile_name):
     config['signature'] = input(gradient_text("Enter the signature to append to each message: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
     
     config['blacklist'] = input(gradient_text("Enter blacklisted words (comma separated, or leave blank): ", PROMPT_COLOR_START, PROMPT_COLOR_END)).split(',')
-config['blacklist'] = [word.strip().lower() for word in config['blacklist'] if word.strip()]
+    config['blacklist'] = [word.strip().lower() for word in config['blacklist'] if word.strip()]
 
-profiles[profile_name] = config
-save_profile(profile_name, config)
-print(gradient_text(f"Profile '{profile_name}' has been updated.", SUCCESS_COLOR, SUCCESS_COLOR, "✅"))
+    profiles[profile_name] = config
+    save_profile(profile_name, config)
+    print(gradient_text(f"Profile '{profile_name}' has been updated.", SUCCESS_COLOR, SUCCESS_COLOR, "✅"))
 
 async def graceful_shutdown(credentials_saved, phone_number):
     if credentials_saved:
