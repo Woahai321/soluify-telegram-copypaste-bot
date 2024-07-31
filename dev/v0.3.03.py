@@ -290,10 +290,10 @@ def edit_profile(profile_name):
     print(gradient_text(f"Profile '{profile_name}' has been updated.", SUCCESS_COLOR, SUCCESS_COLOR, "✅"))
 
 async def graceful_shutdown(credentials_saved, phone_number):
-    if not credentials_saved:
-        print(gradient_text("Preparing to delete temporary credentials and session files...", MAIN_COLOR_START, MAIN_COLOR_END, "🧹"))
-    else:
+    if credentials_saved:
         print(gradient_text("Your encrypted credentials will be kept for future use.", MAIN_COLOR_START, MAIN_COLOR_END, "🔒"))
+    else:
+        print(gradient_text("Preparing to delete temporary credentials and session files...", MAIN_COLOR_START, MAIN_COLOR_END, "🧹"))
     
     action = "SAVE" if credentials_saved else "DELETE"
     print(gradient_text(f"IMPORTANT: You have chosen to {action} your credentials upon exit.", ALERT_COLOR, ALERT_COLOR, "⚠️"))
@@ -311,6 +311,14 @@ async def graceful_shutdown(credentials_saved, phone_number):
         print(gradient_text("Soluify is signing off. Your choices have been applied. Stay safe!", SUCCESS_COLOR, SUCCESS_COLOR, "🌙"))
     else:
         print(gradient_text("Operation cancelled. No changes were made to your credentials.", MAIN_COLOR_START, MAIN_COLOR_END))
+        if credentials_saved:
+            # If the user previously chose to save credentials but now decides not to, delete the credentials file
+            try:
+                os.remove(CREDENTIALS_FILE)
+                print(gradient_text("Credentials file has been deleted as per your request.", SUCCESS_COLOR, SUCCESS_COLOR, "✅"))
+            except Exception as e:
+                logger.error(f"Error while deleting credentials file: {e}")
+                print(gradient_text(f"Error while deleting credentials file: {e}", ALERT_COLOR, ALERT_COLOR))
         print(gradient_text("Please run the script again if you want to make changes.", MAIN_COLOR_START, MAIN_COLOR_END))
 
     # Add a final confirmation before exiting
