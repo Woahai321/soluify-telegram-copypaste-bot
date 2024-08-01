@@ -27,7 +27,7 @@ Welcome to the **Soluify Telegram Copy & Paste Bot**! 🎉 This isn't just any b
 
 ## 🎬 Demo
 
-![Soluify Bot In Action](https://share.woahlab.com/-aFyvV8sDmQ)
+![Soluify Bot In Action](https://share.woahlab.com/-Kwzz3cn4rq)
 
 ---
 
