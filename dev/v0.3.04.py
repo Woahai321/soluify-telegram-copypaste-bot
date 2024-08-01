@@ -100,13 +100,13 @@ def decrypt_data(encrypted_data, password):
     f = Fernet(key)
     return json.loads(f.decrypt(encrypted_data).decode())
 
-def store_credentials(api_id, api_hash, phone_number):
+def store_credentials():
     # Display the security warning first
     print(gradient_text("SECURITY WARNING", ALERT_COLOR, ALERT_COLOR, "🚨"))
     print(gradient_text("You are about to interact with your API credentials for your Telegram account.", ALERT_COLOR, ALERT_COLOR))
     print(gradient_text("These should be treated with the same level of security as your bank details.", ALERT_COLOR, ALERT_COLOR))
     print(gradient_text("Please ensure you're in a secure environment before proceeding.", ALERT_COLOR, ALERT_COLOR))
-    
+
     proceed = input(gradient_text("Do you wish to proceed? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
     if proceed.lower() != 'y':
         print(gradient_text("Operation cancelled. Exiting for your security.", MAIN_COLOR_START, MAIN_COLOR_END))
@@ -119,7 +119,7 @@ def store_credentials(api_id, api_hash, phone_number):
 
     save_choice = input(gradient_text("Do you wish to save your login credentials for future use (stay signed in)? (y/n): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
     print(gradient_text("From a security perspective, saving credentials is not recommended.", ALERT_COLOR, ALERT_COLOR, "⚠️"))
-    
+
     if save_choice.lower() == 'y':
         password = getpass.getpass(gradient_text("Enter a strong password to encrypt your credentials: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
         credentials = {
@@ -133,7 +133,7 @@ def store_credentials(api_id, api_hash, phone_number):
         print(gradient_text("Credentials saved and encrypted.", SUCCESS_COLOR, SUCCESS_COLOR, "🔐"))
     else:
         print(gradient_text("Credentials will not be saved. They will be deleted when you exit the script.", MAIN_COLOR_START, MAIN_COLOR_END))
-    
+
     return save_choice.lower() == 'y'
 
 def read_credentials():
@@ -449,10 +449,8 @@ Welcome to the Soluify Telegram Copy & Paste Bot!
 
     if api_id is None or api_hash is None or phone_number is None:
         print(gradient_text("Let's set up your Telegram API credentials!", MAIN_COLOR_START, MAIN_COLOR_END, "🚀"))
-        api_id = getpass.getpass(gradient_text("Please enter your API ID: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
-        api_hash = getpass.getpass(gradient_text("Please enter your API Hash: ", PROMPT_COLOR_START, PROMPT_COLOR_END))
-        phone_number = input(gradient_text("Please enter your phone number (e.g., 447123456789): ", PROMPT_COLOR_START, PROMPT_COLOR_END))
-        credentials_saved = store_credentials(api_id, api_hash, phone_number)
+        credentials_saved = store_credentials()
+        api_id, api_hash, phone_number = read_credentials()
     else:
         credentials_saved = True
 
