@@ -206,4 +206,24 @@ Remember, a fit bot is a happy bot! 💪🤖
 
 ---
 
-Happy automating, and welcome to the future of Telegram message management! 🚀 Remember, our bot might not be able to make you a cup of coffee, but it'll definitely help you manage your messages faster than you can say "forwarded"! 😉
+## 🛡️ Legal Disclaimer
+
+While the **Soluify Telegram Copy & Paste Bot** is designed to help you automate your message management efficiently, it's crucial to use it responsibly and in accordance with Telegram's Terms of Service (ToS). Here are a few key points to keep in mind:
+
+1. **Compliance with Telegram's ToS**:
+    - This bot is a tool that can be used in various ways. It is the user's responsibility to ensure that their usage of the bot complies with Telegram's ToS. We advise users to regularly review Telegram's [Terms of Service](https://telegram.org/tos) to stay informed of any changes.
+
+2. **Prohibited Activities**:
+    - The bot should not be used for spamming, unsolicited messaging, or any form of abuse. Users must ensure that their actions do not violate anti-spam policies or privacy guidelines.
+
+3. **Rate Limits**:
+    - Users are responsible for managing the rate at which messages are forwarded to avoid triggering Telegram's rate limits. Excessive use that leads to rate limiting or bans is outside the scope of this bot's intended use.
+
+4. **User Consent**:
+    - Ensure that all parties involved are aware of and consent to the forwarding of messages. Forwarding messages without consent can lead to privacy violations and is not endorsed by the creators of this bot.
+
+5. **Security**:
+    - Protect your API credentials and never share them publicly. The bot is designed with security in mind, but users must take steps to safeguard their information.
+
+6. **Responsibility for Actions**:
+    - By using this bot, you agree that you are solely responsible for any actions taken using the bot. The creators of the **Soluify Telegram Copy & Paste Bot** are not liable for any misuse or consequences arising from the use of this tool.
