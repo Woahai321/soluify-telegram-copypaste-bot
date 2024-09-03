@@ -33,7 +33,7 @@ Welcome to the **Soluify Telegram Copy & Paste Bot**! 🎉 This isn't just any b
 
 ## 🌟 Features
 
-- **Keyword-Based Forwarding:** Automatically send messages containing your chosen keywords to designated chats.
+- **Keyword-Based Forwarding:** Automatically send messages containing your keywords to designated chats.
 - **Multiple Source & Destination Chats:** Monitor and copy messages from various chats simultaneously.
 - **Custom Signatures:** Add a personal touch to your forwarded messages with customizable signatures.
 - **Blacklisting:** Block messages containing specific words or characters.
