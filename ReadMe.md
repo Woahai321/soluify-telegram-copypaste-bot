@@ -152,7 +152,7 @@ python SoluifyCopier.py
 
 ## 📞 Contact
 
-Got questions or need help? Don't hesitate to reach out to us [here](https://soluify.com/contact/). We're here for you!
+Got questions or need help? Don't hesitate to add an issue on this repo and we can work through it together!
 
 ---
 
