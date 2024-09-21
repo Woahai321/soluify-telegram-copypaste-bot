@@ -66,6 +66,7 @@ The Soluify Bot harnesses the power of the [Telethon](https://github.com/LonamiW
 
 - **Python 3.7 or higher**
 - Basic command line knowledge
+- Reccomend to use on Ubuntu, but should work across the board
 
 ### Installation Steps
 
