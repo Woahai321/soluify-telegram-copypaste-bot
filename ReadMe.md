@@ -157,6 +157,17 @@ Got questions or need help? Don't hesitate to add an issue on this repo and we c
 
 ---
 
+## 💰 Donations
+
+If you find our work useful and would like to support us, feel free to make a donation using the addresses below:
+
+- BTC (Bitcoin): `bc1qxjpfszwvy3ty33weu6tjkr394uq30jwkysp4x0`
+- ETH (Ethereum): `0xAF3ADE79B7304784049D200ea50352D1C717d7f2`
+
+Thank you for your support!
+
+---
+
 ## 🤝 Contributing
 
 We love contributions! Here's how you can join the fun:
